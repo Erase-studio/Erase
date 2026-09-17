@@ -21,7 +21,7 @@ export function SmoothScroll() {
     const fine = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
     if (reduced || !fine) return;
 
-    const lenis = new Lenis({ lerp: 0.11, wheelMultiplier: 0.95, anchors: { offset: 0 } });
+    const lenis = new Lenis({ lerp: 0.085, wheelMultiplier: 0.9, anchors: { offset: 0 } });
     window.__lenis = lenis;
     lenis.on("scroll", ScrollTrigger.update);
     const tick = (time: number) => lenis.raf(time * 1000);

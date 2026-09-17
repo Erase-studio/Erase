@@ -1,62 +1,74 @@
 import type { Metadata } from "next";
-import { services, stack } from "@/content/agency";
-import { PageHeader } from "@/components/agency/PageHeader";
-import { Engagements } from "@/components/agency/Engagements";
-import { Faq } from "@/components/agency/Faq";
-import { CtaBand } from "@/components/agency/CtaBand";
-import { Inside, Skin } from "@/components/chapters/Inside";
-import { EraseReveal } from "@/components/erase/EraseReveal";
+import { engagements, faqs, stack } from "@/content/agency";
+import { PageHead } from "@/components/site/PageHead";
+import { ServiceRows } from "@/components/home/ServiceRows";
+import { Faq } from "@/components/site/Faq";
+import { TransitionLink } from "@/components/system/TransitionLink";
+import { Roll } from "@/components/ui/Roll";
 
 export const metadata: Metadata = {
   title: "Services",
   description:
-    "Strategy, UX, art direction, motion, development and growth. Everything a high-performance website needs, from one agency.",
+    "Strategy, interface design, art direction, motion and 3D, development and growth. Everything a website needs, from one studio.",
   alternates: { canonical: "/services" },
 };
 
 export default function ServicesPage() {
   return (
     <main id="main">
-      <PageHeader
-        crumb="Services"
-        title="Services."
-        intro="Six disciplines, one team. We take a website from the first workshop to launch, and keep it improving after."
+      <PageHead
+        index="(Index) Services"
+        title="Services"
+        scene="quiet"
+        lede="Six disciplines, one small team. We take a website from the first workshop to launch, and keep improving it after."
       >
-        <ul className="stack" aria-label="Tools we build with">
-          {stack.slice(0, 5).map((s) => (
-            <li key={s}>{s}</li>
+        <ul className="chips" aria-label="Tools we build with">
+          {stack.map((s) => (
+            <li key={s} className="mono">
+              {s}
+            </li>
           ))}
         </ul>
-      </PageHeader>
+      </PageHead>
 
-      <section className="grain sdet" data-chapter="services-detail" data-chapter-label="Services" data-theme="dark">
-        <div className="frame">
-          {services.map((s, i) => (
-            <article key={s.id} id={s.id} className="sdet__row">
-              <div>
-                <p className="t-label sdet__num">{String(i + 1).padStart(2, "0")} / 06</p>
-                <h2 className="sdet__name">{s.name}</h2>
-                <p className="sdet__short">{s.short}</p>
-                <ul className="sdet__list">
-                  {s.deliverables.map((d) => (
-                    <li key={d}>{d}</li>
-                  ))}
-                </ul>
+      <ServiceRows kicker="What we do" />
+
+      <section className="eng frame" data-scene="quietNight" aria-labelledby="eng-title">
+        <header className="eng__head">
+          <p className="mono muted" data-reveal="fade">
+            Ways to work together
+          </p>
+          <h2 id="eng-title" className="h2" data-reveal="lines">
+            Three ways in.
+          </h2>
+        </header>
+        <ol className="eng__grid">
+          {engagements.map((e, i) => (
+            <li key={e.id} className="eng__card" data-featured={e.featured ?? false} data-reveal="fade" data-delay={String(i * 0.08)}>
+              <div className="eng__top">
+                <span className="mono muted">0{i + 1}</span>
+                <span className="mono">{e.timeline}</span>
               </div>
-              <EraseReveal cover="graphite" className="sdet__visual">
-                <div className="skin-box">
-                  <Skin i={s.skin} />
-                </div>
-              </EraseReveal>
-            </article>
+              <h3 className="eng__name">{e.name}</h3>
+              <p className="mono muted">{e.for}</p>
+              <p className="eng__summary">{e.summary}</p>
+              <ul className="eng__list">
+                {e.includes.map((x) => (
+                  <li key={x}>{x}</li>
+                ))}
+              </ul>
+              <TransitionLink href={`/contact?type=${e.id}`} title="Contact" className={`pill ${e.featured ? "pill--solid" : ""}`}>
+                <Roll>{`Start a ${e.name.toLowerCase()}`}</Roll>
+                <span className="pill__arrow" aria-hidden="true">
+                  →
+                </span>
+              </TransitionLink>
+            </li>
           ))}
-        </div>
+        </ol>
       </section>
 
-      <Inside />
-      <Engagements />
-      <Faq />
-      <CtaBand />
+      <Faq items={faqs} />
     </main>
   );
 }

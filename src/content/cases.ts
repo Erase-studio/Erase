@@ -15,23 +15,23 @@ export type CaseStudy = {
 
 export const cases: Record<string, CaseStudy> = {
   erase: {
-    lede: "Our own site. It opens as the website we’d never build, and hands you the eraser.",
-    problem: { title: "Every agency says the same thing.", body: "Gradient blob. Logo wall. “Digital experiences.”" },
-    idea: { title: "Let the visitor erase it.", body: "The name became the interaction." },
-    quote: "Don’t say it’s different. Rub out what isn’t.",
+    lede: "Our own site. It opens on the website every agency ships, drawn in dust, and lets you tear through it.",
+    problem: { title: "Every agency site says the same thing.", body: "Gradient blob. Logo wall. “Digital experiences.”" },
+    idea: { title: "Turn the template to dust.", body: "One world of particles that becomes whatever each section needs." },
+    quote: "Don’t say it’s different. Show the template falling apart.",
     decisions: [
-      { title: "A real brush", body: "Velocity, crumbs, gravity." },
-      { title: "One accent", body: "Non-photo blue." },
-      { title: "One axis", body: "Width does the motion." },
-      { title: "WebGL, once", body: "Only the headline smears." },
+      { title: "One world", body: "A single WebGL scene behind every page." },
+      { title: "Dust as material", body: "Every shape is the same grains, re-formed." },
+      { title: "Day and night", body: "Charcoal on paper, light in the dark." },
+      { title: "Type stays quiet", body: "Small labels, few words, big air." },
     ],
     palette: [
-      { name: "Graphite", hex: "#111213" },
-      { name: "Sheet", hex: "#E9EAEC" },
-      { name: "Blueline", hex: "#79C8EE" },
-      { name: "Smudge", hex: "#8B8E94" },
+      { name: "Paper", hex: "#ECEBE6" },
+      { name: "Graphite", hex: "#0B0C0E" },
+      { name: "Erase blue", hex: "#3D63FF" },
+      { name: "Charcoal", hex: "#121316" },
     ],
-    type: { name: "Mona Sans", sample: "Nothing generic left.", note: "wght 200–900 · wdth 75–125" },
+    type: { name: "Mona Sans", sample: "We turn templates to dust.", note: "wght 500 · Geist Mono for labels" },
   },
   "khumbu-route": {
     lede: "A Himalayan trekking site that sells the route: its altitude, its days, its price.",

@@ -4,7 +4,7 @@ import { useId, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { budgets, engagements, services, timelines } from "@/content/agency";
 import { site } from "@/content/site";
-import { Magnetic } from "@/components/ui/Magnetic";
+import { Roll } from "@/components/ui/Roll";
 
 type Status = "idle" | "sending" | "sent" | "mailto" | "error";
 
@@ -85,7 +85,7 @@ export function BriefForm() {
   );
 
   return (
-    <div className="contact__formwrap" data-done={done}>
+    <div className="brief__wrap" data-done={done}>
       <form className="brief__form" onSubmit={onSubmit} noValidate inert={done}>
         <div className="field">
           <label htmlFor={id("name")}>Your name</label>
@@ -103,7 +103,7 @@ export function BriefForm() {
         </div>
         <div className="field">
           <label htmlFor={id("website")}>
-            Current website <span className="text-smudge">(optional)</span>
+            Current website <span className="muted">(optional)</span>
           </label>
           <input id={id("website")} name="website" inputMode="url" placeholder="yourbrand.com" />
         </div>
@@ -146,25 +146,26 @@ export function BriefForm() {
           {errors.message && <p className="field__error">{errors.message}</p>}
         </div>
 
-        <div className="contact__hp" aria-hidden="true">
+        <div className="brief__hp" aria-hidden="true">
           <input name="company_hp" tabIndex={-1} autoComplete="off" />
         </div>
 
-        <div className="brief__wide flex flex-wrap items-center gap-8">
-          <Magnetic strength={0.3}>
-            <button type="submit" className="send" disabled={status === "sending"} data-cursor-label="Send">
-              {status === "sending" ? "Sending…" : "Send brief →"}
-            </button>
-          </Magnetic>
-          <p role="alert" className="text-[15px] text-[#ff8a7a]">
+        <div className="brief__wide brief__send">
+          <button type="submit" className="pill pill--solid pill--lg" disabled={status === "sending"}>
+            <Roll>{status === "sending" ? "Sending…" : "Send brief"}</Roll>
+            <span className="pill__arrow" aria-hidden="true">
+              →
+            </span>
+          </button>
+          <p role="alert" className="brief__error">
             {status === "error" ? "That didn’t send. Try again, or email us directly." : ""}
           </p>
         </div>
       </form>
 
-      <div className="contact__done" role="status" aria-live="polite">
-        {status === "sent" && <p className="t-h2">Brief received. We’ll be in touch.</p>}
-        {status === "mailto" && <p className="t-h2">Your email app has the brief ready to send.</p>}
+      <div className="brief__done" role="status" aria-live="polite">
+        {status === "sent" && <p className="h2">Brief received. We’ll be in touch.</p>}
+        {status === "mailto" && <p className="h2">Your email app has the brief ready to send.</p>}
       </div>
     </div>
   );

@@ -7,10 +7,10 @@ import { Cursor } from "@/components/system/Cursor";
 import { Loader } from "@/components/system/Loader";
 import { PageTransition } from "@/components/system/PageTransition";
 import { Nav } from "@/components/system/Nav";
-import { ChapterFx } from "@/components/system/ChapterFx";
-import { Footer } from "@/components/chapters/Footer";
+import { RevealFx } from "@/components/system/RevealFx";
+import { Footer } from "@/components/site/Footer";
 import { Details } from "@/components/system/Details";
-import { EraserStage } from "@/components/three/EraserStage";
+import { WorldCanvas } from "@/components/world/WorldCanvas";
 import "./globals.css";
 
 const mona = Mona_Sans({
@@ -30,12 +30,12 @@ const mono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title: {
-    default: "Erase: websites with nothing generic left",
+    default: "Erase: we turn templates to dust",
     template: "%s · Erase",
   },
   description: site.description,
   openGraph: {
-    title: "Erase: websites with nothing generic left",
+    title: "Erase: we turn templates to dust",
     description: site.description,
     url: site.url,
     siteName: "Erase",
@@ -46,8 +46,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#111213",
-  colorScheme: "dark",
+  themeColor: "#ecebe6",
+  colorScheme: "light",
 };
 
 const jsonLd = {
@@ -66,28 +66,29 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="en" className={`${mona.variable} ${mono.variable}`} suppressHydrationWarning>
       <head>
         <noscript>
-          <style>{`.erase-veil{display:none!important}.reveal-line>span{transform:none!important}[data-hero-in]{opacity:1!important}`}</style>
+          <style>{`[data-reveal]{opacity:1!important;transform:none!important}.loader{display:none!important}`}</style>
         </noscript>
       </head>
       <body>
-        {/* Decides motion and whether to replay the intro before first paint. */}
+        {/* Decides motion before first paint; returning visitors get a shorter loader. */}
         <Script id="boot" strategy="beforeInteractive">
-          {`(function(d){var r=matchMedia('(prefers-reduced-motion: reduce)').matches,s=false;try{s=sessionStorage.getItem('erase:seen')==='1'}catch(e){}if(!r)d.classList.add('motion');if(r||s){d.classList.add('intro-skip');d.dataset.intro='done'}else d.dataset.intro='template'})(document.documentElement)`}
+          {`(function(d){var r=matchMedia('(prefers-reduced-motion: reduce)').matches,s=false;try{s=sessionStorage.getItem('erase:seen')==='1'}catch(e){}if(!r)d.classList.add('motion');if(s)d.classList.add('intro-skip');d.dataset.tone='day'})(document.documentElement)`}
         </Script>
         <a href="#main" className="skip-link">
           Skip to content
         </a>
         <SmoothScroll />
+        <WorldCanvas />
         <Cursor />
         <PageTransition>
           <Nav />
           {children}
           <Footer />
-          <ChapterFx />
+          <RevealFx />
         </PageTransition>
         <Details />
-        <EraserStage />
         <Loader />
+        <div className="grain" aria-hidden="true" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

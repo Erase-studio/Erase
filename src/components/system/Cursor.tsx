@@ -91,7 +91,7 @@ export function Cursor() {
       const t = e.target as Element | null;
       const hideZone = t?.closest?.("[data-cursor='hide']");
       const labelled = t?.closest?.<HTMLElement>("[data-cursor-label]");
-      const btn = t?.closest?.<HTMLElement>(".btn, .nav__toggle, .chip span");
+      const btn = t?.closest?.<HTMLElement>(".pill");
       const interactive = t?.closest?.("a, button, input, textarea, select, label, [role='button']");
 
       const next = labelled?.dataset.cursorLabel ?? "";

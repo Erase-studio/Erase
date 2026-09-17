@@ -20,25 +20,6 @@ export const site = {
   ],
 } as const;
 
-export const chapters = [
-  { id: "intro", index: "00", label: "Intro" },
-  { id: "vocabulary", index: "01", label: "Vocabulary" },
-  { id: "proof", index: "02", label: "Proof" },
-  { id: "inside", index: "03", label: "Layers" },
-  { id: "process", index: "04", label: "Process" },
-  { id: "contact", index: "05", label: "Contact" },
-] as const;
-
-export type ChapterId = (typeof chapters)[number]["id"];
-
-export const navLinks = [
-  { href: "/work", label: "Work" },
-  { href: "/services", label: "Services" },
-  { href: "/#process", label: "Process" },
-  { href: "/studio", label: "Studio" },
-  { href: "/contact", label: "Contact" },
-] as const;
-
 /**
  * While `name` is empty the site shows `alias` ("The designer"), which reads as
  * intentional. Fill in real names, initials and an optional photo before launch.

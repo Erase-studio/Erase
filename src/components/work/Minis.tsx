@@ -27,13 +27,13 @@ function MiniErase() {
       <div className="mini-erase__after">
         <div className="mini-erase__nav">
           <b>Erase</b>
-          <span>00 — Intro</span>
-          <i>Start a project</i>
+          <span>Design &amp; development</span>
+          <i>Let’s talk</i>
         </div>
         <div className="mini-erase__title">
-          <span>Nothing</span>
-          <span className="pl">generic</span>
-          <span>left.</span>
+          <span>We turn</span>
+          <span className="pl">templates</span>
+          <span>to dust.</span>
         </div>
       </div>
       <div className="mini-erase__before">

@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { site } from "@/content/site";
-import { PageHeader } from "@/components/agency/PageHeader";
-import { BriefForm } from "@/components/agency/BriefForm";
+import { PageHead } from "@/components/site/PageHead";
+import { BriefForm } from "@/components/site/BriefForm";
 
 export const metadata: Metadata = {
   title: "Start a project",
@@ -13,41 +13,38 @@ export const metadata: Metadata = {
 export default function ContactPage() {
   return (
     <main id="main">
-      <PageHeader
-        crumb="Contact"
-        title="Let’s talk."
-        intro="Tell us what you’re building. We read every brief and reply with next steps, not a sales script."
+      <PageHead
+        index="(Index) Contact"
+        title="Let’s talk"
+        scene="contact"
+        lede="Tell us what you’re building. We read every brief and reply with next steps, not a sales script."
       >
-        <p className="avail">
+        <p className="avail mono">
           <i aria-hidden="true" />
           {site.availability}
         </p>
-      </PageHeader>
+      </PageHead>
 
-      <section className="grain brief" data-chapter="brief" data-chapter-label="Project brief" data-theme="dark">
-        <div className="frame brief__grid">
-          <dl className="brief__side">
-            <div>
-              <dt className="t-label text-smudge">Email</dt>
-              <dd>
-                <a href={`mailto:${site.email}`} className="ink-link">
-                  {site.email}
-                </a>
-              </dd>
-            </div>
-            <div>
-              <dt className="t-label text-smudge">What happens next</dt>
-              <dd>An intro call, a clear proposal, then we start.</dd>
-            </div>
-            <div>
-              <dt className="t-label text-smudge">Working with</dt>
-              <dd>Brands and businesses worldwide</dd>
-            </div>
-          </dl>
-          <Suspense>
-            <BriefForm />
-          </Suspense>
-        </div>
+      <section className="brief frame" data-scene="quiet" aria-label="Project brief">
+        <dl className="brief__side" data-reveal="fade">
+          <div>
+            <dt className="mono muted">Email</dt>
+            <dd>
+              <a href={`mailto:${site.email}`}>{site.email}</a>
+            </dd>
+          </div>
+          <div>
+            <dt className="mono muted">What happens next</dt>
+            <dd>An intro call, a clear proposal, then we start.</dd>
+          </div>
+          <div>
+            <dt className="mono muted">Working with</dt>
+            <dd>Brands and businesses worldwide</dd>
+          </div>
+        </dl>
+        <Suspense>
+          <BriefForm />
+        </Suspense>
       </section>
     </main>
   );

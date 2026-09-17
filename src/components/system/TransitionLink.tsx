@@ -7,12 +7,11 @@ type Props = AnchorHTMLAttributes<HTMLAnchorElement> & {
   href: string;
   children: ReactNode;
   title?: string;
-  tone?: { bg: string; fg: string };
   label?: string;
 };
 
-/** A real link (new tabs, crawlers, no-JS all work) that plays the erase transition. */
-export function TransitionLink({ href, children, title, tone, label, onClick, ...rest }: Props) {
+/** A real link (new tabs, crawlers and no-JS all work) that plays the transition. */
+export function TransitionLink({ href, children, title, label, onClick, ...rest }: Props) {
   const { navigate } = usePageTransition();
   return (
     <a
@@ -22,7 +21,7 @@ export function TransitionLink({ href, children, title, tone, label, onClick, ..
         onClick?.(e);
         if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
         e.preventDefault();
-        navigate(href, { title, bg: tone?.bg, fg: tone?.fg, label });
+        navigate(href, { title, label });
       }}
     >
       {children}

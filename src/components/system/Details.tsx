@@ -11,7 +11,7 @@ export function Details() {
       (window as Window & { __eraseHello?: boolean }).__eraseHello = true;
       console.log(
         "%cErase%c\nHand-built by two people. No templates were harmed.\nLike reading source? " + site.email,
-        "font: 800 28px/1.2 sans-serif; color:#79C8EE; letter-spacing:-1px",
+        "font: 800 28px/1.2 sans-serif; color:#3D63FF; letter-spacing:-1px",
         "font: 12px/1.6 monospace; color:#8B8E94",
       );
     }
@@ -21,7 +21,7 @@ export function Details() {
     const onVis = () => {
       if (document.hidden) {
         original = document.title;
-        document.title = "✎ You left it half erased";
+        document.title = "The dust is settling…";
       } else {
         document.title = original;
       }

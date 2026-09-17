@@ -1,24 +1,23 @@
 import type { Metadata } from "next";
-import { PageHeader } from "@/components/agency/PageHeader";
-import { WorkIndex } from "@/components/agency/WorkIndex";
-import { CtaBand } from "@/components/agency/CtaBand";
+import { PageHead } from "@/components/site/PageHead";
+import { WorkList } from "@/components/site/WorkList";
 
 export const metadata: Metadata = {
   title: "Work",
-  description: "Websites designed and built by Erase: live projects and concept studies.",
+  description: "Websites designed and built by Erase: our own studio site and concept studies that show our range.",
   alternates: { canonical: "/work" },
 };
 
-export default function WorkPage() {
+export default function WorkIndexPage() {
   return (
     <main id="main">
-      <PageHeader
-        crumb="Work"
-        title="Work."
-        intro="Websites we’ve designed and built. Live projects, and concept studies that show how we think."
+      <PageHead
+        index="(Index) Work"
+        title="Work"
+        scene="work"
+        lede="Our own site, and concept studies we designed and built to show range. Concepts are always labelled as concepts."
       />
-      <WorkIndex />
-      <CtaBand title="Your website could be next." />
+      <WorkList />
     </main>
   );
 }
