@@ -3,15 +3,13 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { eraserBus } from "@/lib/eraserBus";
 import { onReveal } from "@/lib/gsap";
+import { humanPath, RubSurface, runPath, withEraser } from "@/lib/rub";
 
 /**
  * Covers its content with a flat sheet the colour of the page, then rubs it off
- * in zigzag strokes when it scrolls into view. Reveals take turns, so the one 3D
- * eraser can visibly do each of them.
+ * by hand (uneven back-and-forth strokes) when it scrolls into view. Reveals take
+ * turns, so the one 3D eraser can visibly do each of them.
  */
-
-let queue: Promise<void> = Promise.resolve();
-let waiting = 0;
 
 type Props = {
   children: ReactNode;
@@ -37,96 +35,70 @@ export function EraseReveal({ children, cover = "graphite", className = "", as =
       root.dataset.revealed = "true";
       return;
     }
-    const ctx = canvas.getContext("2d")!;
     const color = COLORS[cover] ?? cover;
-    let w = 0;
-    let h = 0;
+    const surface = new RubSurface({ canvas, cols: 8, rows: 4, strength: 0.34 });
     let done = false;
     let cancelled = false;
 
     const paint = () => {
       const r = root.getBoundingClientRect();
-      w = r.width;
-      h = r.height;
-      const dpr = Math.min(window.devicePixelRatio, 1.5);
-      canvas.width = Math.max(1, Math.round(w * dpr));
-      canvas.height = Math.max(1, Math.round(h * dpr));
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      surface.setSize(r.width, r.height, Math.min(window.devicePixelRatio, 1.5));
+      const ctx = surface.context;
       ctx.fillStyle = color;
-      ctx.fillRect(0, 0, w, h);
+      ctx.fillRect(0, 0, r.width, r.height);
     };
     paint();
     root.dataset.painted = "true";
 
-    const sweep = (drive: boolean) =>
-      new Promise<void>((resolve) => {
-        if (cancelled) return resolve();
-        paint();
-        const r = Math.max(26, Math.min(90, h / 3.2, w / 6));
-        const rows = Math.max(2, Math.ceil(h / (r * 1.35)));
-        const pts: { x: number; y: number }[] = [];
-        for (let i = 0; i <= rows; i++) {
-          const y = (i / rows) * h;
-          pts.push(i % 2 ? { x: w + r, y } : { x: -r, y });
-          pts.push(i % 2 ? { x: -r, y: y + r * 0.5 } : { x: w + r, y: y + r * 0.5 });
-        }
-        const lens = [0];
-        for (let i = 1; i < pts.length; i++) lens.push(lens[i - 1] + Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y));
-        const total = lens[lens.length - 1];
-        const dur = Math.min(1500, 520 + total * 0.12);
-        const t0 = performance.now();
-        let prev = pts[0];
-        let seg = 1;
-        ctx.globalCompositeOperation = "destination-out";
-        ctx.lineCap = "round";
-        ctx.lineJoin = "round";
-        ctx.lineWidth = r * 2;
-
-        const step = (now: number) => {
-          if (cancelled) return resolve();
-          const raw = Math.min(1, (now - t0) / dur);
-          const e = raw < 0.5 ? 2 * raw * raw : 1 - Math.pow(-2 * raw + 2, 2) / 2;
-          const dist = e * total;
-          let i = seg;
-          while (i < lens.length - 1 && lens[i] < dist) i++;
-          const k = (dist - lens[i - 1]) / (lens[i] - lens[i - 1] || 1);
-          const cur = { x: pts[i - 1].x + (pts[i].x - pts[i - 1].x) * k, y: pts[i - 1].y + (pts[i].y - pts[i - 1].y) * k };
-          ctx.beginPath();
-          ctx.moveTo(prev.x, prev.y);
-          for (let j = seg; j < i; j++) ctx.lineTo(pts[j].x, pts[j].y);
-          ctx.lineTo(cur.x, cur.y);
-          ctx.stroke();
-          seg = i;
-          if (drive) {
-            const br = root.getBoundingClientRect();
-            const cx = br.left + Math.max(0, Math.min(w, cur.x));
-            const cy = br.top + cur.y;
-            eraserBus.point(cx, cy, 1, Math.max(0.7, Math.min(1.3, h / 260)));
-            if (Math.hypot(cur.x - prev.x, cur.y - prev.y) > 4) eraserBus.crumbs(cx, cy, 2, Math.sign(cur.x - prev.x));
-          }
-          prev = cur;
-          if (raw < 1) requestAnimationFrame(step);
-          else {
-            ctx.clearRect(0, 0, w, h);
+    const sweep = (drive: boolean) => {
+      if (cancelled) return Promise.resolve();
+      paint();
+      if (!drive)
+        return new Promise<void>((resolve) =>
+          surface.dissolve(520, () => {
             root.dataset.revealed = "true";
             resolve();
+          }),
+        );
+      const { w, h } = surface;
+      const r = Math.max(30, Math.min(100, h / 2.6, w / 5));
+      const path = humanPath(w, h, r, Math.min(1500, 560 + (w + h) * 0.45));
+      let debt = 0;
+      return runPath({
+        surface,
+        path,
+        radius: r,
+        origin: () => {
+          const br = root.getBoundingClientRect();
+          return { x: br.left, y: br.top };
+        },
+        cancelled: () => cancelled,
+        onStep: (x, y, p, dx, dy, removed) => {
+          eraserBus.point(x, y, p, Math.max(0.7, Math.min(1.3, h / 260)));
+          debt += removed * 1.2;
+          if (debt >= 1) {
+            const n = Math.min(4, Math.floor(debt));
+            debt -= n;
+            eraserBus.crumbs(x, y, n, dx, dy);
           }
-        };
-        requestAnimationFrame(step);
-      });
+        },
+      }).then(
+        () =>
+          new Promise<void>((resolve) => {
+            if (cancelled) return resolve();
+            // The last grey streaks lift off.
+            surface.dissolve(260, () => {
+              root.dataset.revealed = "true";
+              resolve();
+            });
+          }),
+      );
+    };
 
     const run = () => {
       if (done) return;
       done = true;
-      // Take a turn with the eraser; if a crowd is waiting, don't make it wait.
-      if (waiting > 2) {
-        sweep(false);
-        return;
-      }
-      waiting++;
-      queue = queue.then(() => sweep(eraserBus.ready()).then(() => new Promise<void>((r) => setTimeout(r, 60)))).finally(() => {
-        waiting--;
-      });
+      withEraser(sweep, () => eraserBus.ready());
     };
 
     let io: IntersectionObserver | undefined;

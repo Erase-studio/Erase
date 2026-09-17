@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { gsap } from "@/lib/gsap";
-import { eraserBus } from "@/lib/eraserBus";
+import { eraserBus, scrub } from "@/lib/eraserBus";
 
 const steps = [
   {
@@ -169,12 +169,13 @@ export function Process() {
               if (a.v < 0 || a.v > 122) return;
               // The eraser rubs the old stage off the frame.
               const r = view.getBoundingClientRect();
-              const f = 0.5 + 0.36 * Math.sin(a.v * 0.3);
+              const f = scrub(a.v / 100, 11);
               const x = r.left + (r.width * (a.v - 25 * f)) / 100;
               const y = r.top + r.height * f;
               const dx = x - eraserBus.state.x;
+              const dy = y - eraserBus.state.y;
               eraserBus.point(x, y, 1, 1.05);
-              if (Math.abs(dx) > 0.5) eraserBus.crumbs(x, y, 2, Math.sign(dx));
+              if (Math.hypot(dx, dy) > 1) eraserBus.crumbs(x, y, 2, dx, dy);
             },
           },
           at,

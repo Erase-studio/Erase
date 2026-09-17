@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { gsap } from "@/lib/gsap";
-import { eraserBus } from "@/lib/eraserBus";
+import { eraserBus, scrub } from "@/lib/eraserBus";
 
 const pairs = [
   { old: "We transform ideas into digital experiences.", now: "Websites people remember." },
@@ -62,10 +62,11 @@ export function Vocabulary() {
               const t = (p.a + 10) / 135;
               if (t <= 0.01 || t >= 0.99) return;
               const x = r.left + (r.width * (p.a - 9)) / 100;
-              const y = r.top + r.height * (0.5 + 0.4 * Math.sin(t * Math.PI * 9));
+              const y = r.top + r.height * (0.5 + 0.9 * (scrub(t, 9) - 0.5));
               const dx = x - eraserBus.state.x;
+              const dy = y - eraserBus.state.y;
               eraserBus.point(x, y, 1, 1.25);
-              if (Math.abs(dx) > 0.5) eraserBus.crumbs(x, y, 3, Math.sign(dx));
+              if (Math.hypot(dx, dy) > 1) eraserBus.crumbs(x, y, 2, dx, dy);
             },
           },
           at + 0.5,

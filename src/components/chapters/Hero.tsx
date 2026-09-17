@@ -24,6 +24,7 @@ const shouldSkipIntro = () => {
 export function Hero() {
   const rootRef = useRef<HTMLElement>(null);
   const layerRef = useRef<HTMLDivElement>(null);
+  const meterRef = useRef<HTMLSpanElement>(null);
   const [rawPhase, setPhase] = useState<Phase>("template");
   const [run, setRun] = useState(0);
   const coarse = !useFinePointer();
@@ -101,6 +102,11 @@ export function Hero() {
     layerRef.current?.querySelector(".erase-layer")?.dispatchEvent(new Event("erase:finish"));
   };
 
+  const onProgress = useCallback((p: number) => {
+    const el = meterRef.current;
+    if (el) el.textContent = String(Math.round(p * 100));
+  }, []);
+
   const showTemplate = phase !== "done";
 
   return (
@@ -167,16 +173,26 @@ export function Hero() {
         </div>
       </div>
 
+      {/* Smudges from the rubbing stay on the page after the template is gone. */}
+      <canvas className="hero__marks" aria-hidden="true" />
+
       {phase === "done" && <InkTitle hostRef={rootRef} />}
 
       {showTemplate && (
         <div ref={layerRef} key={run} className="hero__template">
-          <EraseLayer onDone={onDone} onStart={() => setPhase("erasing")} />
+          <EraseLayer onDone={onDone} onStart={() => setPhase("erasing")} onProgress={onProgress} marks=".hero__marks" />
           <div className="erase-veil" aria-hidden="true" />
           <div className="hero__fig" data-cursor="hide">
             <p className="hero__fig-hint">{coarse ? "Watch." : "Move to erase"}</p>
+            <p className="hero__fig-meter" aria-hidden="true">
+              <span className="hero__fig-bar" />
+              <span>
+                <span ref={meterRef}>0</span>% erased
+              </span>
+            </p>
             <button type="button" className="hero__fig-btn t-label" onClick={eraseForMe}>
-              Skip
+              <span className="hero__fig-skip">Skip</span>
+              <span className="hero__fig-finish">Finish it</span>
             </button>
           </div>
         </div>
