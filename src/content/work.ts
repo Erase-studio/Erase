@@ -30,7 +30,7 @@ export const work: Work[] = [
     sector: "Our own studio",
     year: "2026",
     brief:
-      "Our own studio site: the template, turned to dust.",
+      "Our own studio site: real tools, one pencil line, and the template crumpled.",
     tags: ["Art direction", "Interaction", "Next.js"],
     mini: "erase",
     tone: { bg: "#111213", fg: "#E9EAEC", muted: "#8B8E94" },

@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { gsap, ScrollTrigger } from "@/lib/gsap";
-import { world } from "@/lib/world/store";
+import { sound } from "@/lib/sound";
 
 type Options = { title?: string; label?: string };
 type Ctx = { navigate: (href: string, opts?: Options) => void };
@@ -12,8 +12,8 @@ const TransitionContext = createContext<Ctx>({ navigate: () => {} });
 export const usePageTransition = () => useContext(TransitionContext);
 
 /**
- * Route changes: the dust lets go, a graphite sheet rises with the destination's
- * name, the route swaps underneath, and the sheet carries on up and out.
+ * Route changes: a graphite sheet rises with the destination's name, the route
+ * swaps underneath, and the sheet carries on up and out.
  */
 export function PageTransition({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -40,6 +40,7 @@ export function PageTransition({ children }: { children: ReactNode }) {
       }
       busy.current = true;
       window.__erasePT = true;
+      sound.whoosh(1, 0.9);
       setOpts(o);
       const root = rootRef.current!;
       const panel = root.querySelector<HTMLElement>(".pt__panel")!;
@@ -50,7 +51,6 @@ export function PageTransition({ children }: { children: ReactNode }) {
         const chars = root.querySelectorAll(".pt__label span");
         gsap
           .timeline()
-          .to(world, { pulse: 1, duration: 0.9, ease: "power2.in" }, 0)
           .fromTo(panel, { yPercent: 101, borderRadius: "var(--radius) var(--radius) 0 0" }, { yPercent: 0, borderRadius: 0, duration: 0.9, ease: "expo.inOut" }, 0)
           .fromTo(chars, { yPercent: 105 }, { yPercent: 0, duration: 0.8, stagger: 0.02, ease: "expo.out" }, 0.45)
           .add(() => {
@@ -81,8 +81,7 @@ export function PageTransition({ children }: { children: ReactNode }) {
                     },
                   })
                   .to(chars, { yPercent: -105, duration: 0.5, stagger: 0.012, ease: "power3.in" }, 0)
-                  .to(panel, { yPercent: -101, borderRadius: "0 0 var(--radius) var(--radius)", duration: 1, ease: "expo.inOut" }, 0.15)
-                  .to(world, { pulse: 0, duration: 1.8, ease: "power2.out" }, 0.3);
+                  .to(panel, { yPercent: -101, borderRadius: "0 0 var(--radius) var(--radius)", duration: 1, ease: "expo.inOut" }, 0.15);
               }, 80);
             });
           }, "+=0.1");

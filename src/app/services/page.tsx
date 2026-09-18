@@ -19,7 +19,6 @@ export default function ServicesPage() {
       <PageHead
         index="(Index) Services"
         title="Services"
-        scene="quiet"
         lede="Six disciplines, one small team. We take a website from the first workshop to launch, and keep improving it after."
       >
         <ul className="chips" aria-label="Tools we build with">
@@ -33,7 +32,7 @@ export default function ServicesPage() {
 
       <ServiceRows kicker="What we do" />
 
-      <section className="eng frame" data-scene="quietNight" aria-labelledby="eng-title">
+      <section className="eng frame" aria-labelledby="eng-title">
         <header className="eng__head">
           <p className="mono muted" data-reveal="fade">
             Ways to work together

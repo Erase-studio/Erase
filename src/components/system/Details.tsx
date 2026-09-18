@@ -21,7 +21,7 @@ export function Details() {
     const onVis = () => {
       if (document.hidden) {
         original = document.title;
-        document.title = "The dust is settling…";
+        document.title = "Still erasing…";
       } else {
         document.title = original;
       }

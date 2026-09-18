@@ -37,7 +37,7 @@ export function WorkList() {
   }, []);
 
   return (
-    <section ref={rootRef} className="wl frame" data-scene="quietNight" aria-label="All work" onPointerLeave={() => setActive(null)}>
+    <section ref={rootRef} className="wl frame" aria-label="All work" onPointerLeave={() => setActive(null)}>
       <div className="wl__head mono muted">
         <span>Project</span>
         <span>Type</span>

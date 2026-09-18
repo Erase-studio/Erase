@@ -5,13 +5,13 @@ const steps = [
   { name: "Launch", when: "Week 6 onward", body: "Go live, measure, keep improving." },
 ];
 
-/** The dust draws one line with four stops; the steps sit underneath it. */
+/** Four stops. The pencil line runs straight through them, so it becomes the timeline. */
 export function ProcessPath() {
   return (
-    <section id="process" className="proc frame" data-scene="process" aria-labelledby="proc-title">
+    <section id="process" className="proc frame" aria-labelledby="proc-title">
       <header className="proc__head">
         <p className="mono muted" data-reveal="fade">
-          (05) How a project runs
+          (04) How a project runs
         </p>
         <h2 id="proc-title" className="h2" data-reveal="lines">
           Four stops. No surprises.
@@ -20,6 +20,7 @@ export function ProcessPath() {
       <ol className="proc__steps">
         {steps.map((s, i) => (
           <li key={s.name} data-reveal="fade" data-delay={String(i * 0.08)}>
+            <span className="proc__stop" data-line="0.5,0.5,0" aria-hidden="true" />
             <p className="mono muted">
               0{i + 1} · {s.when}
             </p>

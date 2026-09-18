@@ -10,7 +10,7 @@ import { Nav } from "@/components/system/Nav";
 import { RevealFx } from "@/components/system/RevealFx";
 import { Footer } from "@/components/site/Footer";
 import { Details } from "@/components/system/Details";
-import { WorldCanvas } from "@/components/world/WorldCanvas";
+import { StageCanvas } from "@/components/stage/StageCanvas";
 import "./globals.css";
 
 const mona = Mona_Sans({
@@ -30,12 +30,12 @@ const mono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title: {
-    default: "Erase: we turn templates to dust",
+    default: "Erase: nothing generic survives here",
     template: "%s · Erase",
   },
   description: site.description,
   openGraph: {
-    title: "Erase: we turn templates to dust",
+    title: "Erase: nothing generic survives here",
     description: site.description,
     url: site.url,
     siteName: "Erase",
@@ -70,15 +70,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         </noscript>
       </head>
       <body>
-        {/* Decides motion before first paint; returning visitors get a shorter loader. */}
+        {/* Decides motion and day/night before first paint; returning visitors get a shorter loader. */}
         <Script id="boot" strategy="beforeInteractive">
-          {`(function(d){var r=matchMedia('(prefers-reduced-motion: reduce)').matches,s=false;try{s=sessionStorage.getItem('erase:seen')==='1'}catch(e){}if(!r)d.classList.add('motion');if(s)d.classList.add('intro-skip');d.dataset.tone='day'})(document.documentElement)`}
+          {`(function(d){var r=matchMedia('(prefers-reduced-motion: reduce)').matches,s=false;try{s=sessionStorage.getItem('erase:seen')==='1'}catch(e){}if(!r)d.classList.add('motion');var t=null;try{t=localStorage.getItem('erase:theme')}catch(e){}d.dataset.theme=t||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');if(s)d.classList.add('intro-skip')})(document.documentElement)`}
         </Script>
         <a href="#main" className="skip-link">
           Skip to content
         </a>
         <SmoothScroll />
-        <WorldCanvas />
         <Cursor />
         <PageTransition>
           <Nav />
@@ -86,6 +85,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <Footer />
           <RevealFx />
         </PageTransition>
+        <StageCanvas />
         <Details />
         <Loader />
         <div className="grain" aria-hidden="true" />

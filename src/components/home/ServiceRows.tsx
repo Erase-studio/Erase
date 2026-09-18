@@ -1,45 +1,42 @@
 import { services } from "@/content/agency";
 
-/**
- * One service per screen. Each row names a scene, so the dust changes shape beside it:
- * a focus, a grid, a bloom, a knot, a lattice, a rising helix.
- */
-export function ServiceRows({ kicker = "(04) What we do" }: { kicker?: string }) {
+/** Six services as big rows. The pencil line switches back across the list as you read. */
+export function ServiceRows({ kicker = "(03) What we do" }: { kicker?: string }) {
   return (
     <section className="svc frame" aria-labelledby="svc-title">
-      {services.map((s, i) => (
-        <article key={s.id} id={s.id} className="svc__row" data-scene={`svc-${i}`}>
-          <div className="svc__text">
-            {i === 0 && (
-              <p className="mono muted svc__kicker" data-reveal="fade">
-                {kicker}
-              </p>
-            )}
-            <p className="mono svc__num" data-reveal="fade">
-              {String(i + 1).padStart(2, "0")} / {String(services.length).padStart(2, "0")}
-            </p>
-            {i === 0 ? (
-              <h2 id="svc-title" className="svc__name" data-reveal="lines">
-                {s.name}
-              </h2>
-            ) : (
-              <h3 className="svc__name" data-reveal="lines">
-                {s.name}
-              </h3>
-            )}
-            <p className="body" data-reveal="fade" data-delay="0.1">
-              {s.short}
-            </p>
-            <ul className="svc__list" data-reveal="fade" data-delay="0.2">
-              {s.deliverables.map((d) => (
-                <li key={d} className="mono">
-                  {d}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </article>
-      ))}
+      <header className="svc__head">
+        <p className="mono muted" data-reveal="fade">
+          {kicker}
+        </p>
+        <h2 id="svc-title" className="h2" data-reveal="lines">
+          Everything a website needs. One studio.
+        </h2>
+      </header>
+      <ol className="svc__list">
+        {services.map((s, i) => (
+          <li
+            key={s.id}
+            id={s.id}
+            className="svc__row"
+            data-reveal="fade"
+            // The pencil rules the list: along each separator, turning in the margins.
+            data-line={i % 2 === 0 ? "-0.02,0,0;1.02,0,0" : "1.02,0,0;-0.02,0,0"}
+          >
+            <span className="mono svc__num">{String(i + 1).padStart(2, "0")}</span>
+            <h3 className="svc__name">{s.name}</h3>
+            <div className="svc__detail">
+              <p className="body">{s.short}</p>
+              <ul className="svc__tags">
+                {s.deliverables.map((d) => (
+                  <li key={d} className="mono">
+                    {d}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </li>
+        ))}
+      </ol>
     </section>
   );
 }

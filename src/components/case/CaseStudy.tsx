@@ -10,7 +10,7 @@ export function CaseStudy({ item, data, next, index }: { item: Work; data: CaseD
   const n = (v: number) => String(v).padStart(2, "0");
   return (
     <>
-      <header className="cs-hero frame" data-scene="quietNight">
+      <header className="cs-hero frame">
         <div className="cs-hero__top" data-reveal="fade">
           <TransitionLink href="/work" title="Work" className="pill">
             <span className="pill__arrow" aria-hidden="true">
@@ -50,7 +50,7 @@ export function CaseStudy({ item, data, next, index }: { item: Work; data: CaseD
         </div>
       </header>
 
-      <section className="cs-shot frame" data-scene="quietNight" aria-label={`${item.title} preview`}>
+      <section className="cs-shot frame" aria-label={`${item.title} preview`}>
         <div className="cs-shot__frame" data-reveal="fade">
           <PreviewFrame item={item} />
         </div>
@@ -59,7 +59,7 @@ export function CaseStudy({ item, data, next, index }: { item: Work; data: CaseD
         )}
       </section>
 
-      <section className="cs-story frame" data-scene="quiet" aria-label="The problem and the idea">
+      <section className="cs-story frame" aria-label="The problem and the idea">
         {[
           { label: "The problem", ...data.problem },
           { label: "The idea", ...data.idea },
@@ -120,7 +120,7 @@ export function CaseStudy({ item, data, next, index }: { item: Work; data: CaseD
         </div>
       </section>
 
-      <TransitionLink href={`/work/${next.slug}`} title={next.title} label={next.kind} className="cs-next frame" data-scene="wordmark">
+      <TransitionLink href={`/work/${next.slug}`} title={next.title} label={next.kind} className="cs-next frame">
         <span className="mono muted">Next project</span>
         <span className="cs-next__title">
           <Roll>{next.title}</Roll>

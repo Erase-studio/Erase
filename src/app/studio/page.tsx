@@ -15,11 +15,10 @@ export default function StudioPage() {
       <PageHead
         index="(Index) Studio"
         title="Studio"
-        scene="studio"
         lede="Erase is an independent design and development studio. We design, build and grow websites for brands that don’t want to look like anyone else."
       />
 
-      <section className="princ frame" data-scene="quiet" aria-labelledby="princ-title">
+      <section className="princ frame" aria-labelledby="princ-title">
         <header className="princ__head">
           <p className="mono muted" data-reveal="fade">
             How we work
@@ -39,7 +38,7 @@ export default function StudioPage() {
         </ol>
       </section>
 
-      <section className="kit frame" data-scene="quietNight" aria-labelledby="kit-title">
+      <section className="kit frame" aria-labelledby="kit-title">
         <p id="kit-title" className="mono muted" data-reveal="fade">
           What we build with
         </p>

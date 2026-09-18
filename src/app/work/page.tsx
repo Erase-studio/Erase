@@ -14,7 +14,6 @@ export default function WorkIndexPage() {
       <PageHead
         index="(Index) Work"
         title="Work"
-        scene="work"
         lede="Our own site, and concept studies we designed and built to show range. Concepts are always labelled as concepts."
       />
       <WorkList />

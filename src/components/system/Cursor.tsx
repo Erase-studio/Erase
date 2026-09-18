@@ -77,7 +77,7 @@ export function Cursor() {
     };
     raf = requestAnimationFrame(render);
 
-    const onMove = (e: PointerEvent) => {
+    const onMove = (e: PointerEvent | { pointerType: string; clientX: number; clientY: number; target: EventTarget | null }) => {
       if (e.pointerType !== "mouse") return;
       pos.x = e.clientX;
       pos.y = e.clientY;
@@ -125,6 +125,8 @@ export function Cursor() {
     const onDown = () => (html.dataset.cursorDown = "true");
     const onUp = () => (html.dataset.cursorDown = "false");
     const onScroll = () => {
+      // The page moved under a still pointer: look again at what it's over.
+      if (visible) onMove({ pointerType: "mouse", clientX: pos.x, clientY: pos.y, target: document.elementFromPoint(pos.x, pos.y) });
       if (stuck) {
         const r = stuck.getBoundingClientRect();
         if (pos.x < r.left || pos.x > r.right || pos.y < r.top || pos.y > r.bottom) {

@@ -31,6 +31,7 @@
   --ease-io: cubic-bezier(0.76, 0, 0.24, 1);
 
   /* Day: charcoal on paper. */
+  --bg: #ecebe6;
   --fg: #121316;
   --muted: #6c6d72;
   --line: rgb(18 19 22 / 0.14);
@@ -40,8 +41,27 @@
   color-scheme: light;
 }
 
-/* Night: light on graphite. The world decides, per section. */
-html[data-tone="night"] {
+/* Night: the same studio with the lights off. Paper things stay paper. */
+html[data-theme="dark"] {
+  --bg: #0f1012;
+  --fg: #e9e7e1;
+  --muted: #8d8e94;
+  --line: rgb(233 231 225 / 0.14);
+  --solid-bg: #e9e7e1;
+  --solid-fg: #0f1012;
+  --ghost-bg: rgb(233 231 225 / 0.08);
+  color-scheme: dark;
+}
+
+/* The switch between them wipes across from the button (see ThemeToggle). */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+/* Dark panels (the hero window, engagement cards): light on graphite. */
+.dark {
   --fg: #e8ecf4;
   --muted: #8a8f9c;
   --line: rgb(232 236 244 / 0.14);
@@ -70,7 +90,7 @@ html[data-tone="night"] {
   html {
     -webkit-text-size-adjust: 100%;
     text-rendering: optimizeLegibility;
-    background: var(--color-paper);
+    background: var(--bg);
   }
 
   html.lenis,
@@ -87,7 +107,7 @@ html[data-tone="night"] {
   }
 
   body {
-    background: var(--color-paper);
+    background: var(--bg);
     color: var(--fg);
     font-family: var(--font-sans);
     font-size: 16px;
@@ -96,17 +116,6 @@ html[data-tone="night"] {
     -moz-osx-font-smoothing: grayscale;
     overflow-x: clip;
     transition: color 0.7s var(--ease);
-  }
-
-  /* Without WebGL the page itself carries day and night. */
-  html[data-world="off"] body {
-    transition:
-      color 0.7s var(--ease),
-      background-color 0.7s var(--ease);
-  }
-
-  html[data-world="off"][data-tone="night"] body {
-    background: var(--color-graphite);
   }
 
   ::selection {
@@ -396,9 +405,6 @@ html[data-tone="night"] {
     animation: grain 1.2s steps(6) infinite;
   }
 
-  html[data-tone="night"] .grain {
-    opacity: 0.1;
-  }
 
   @keyframes grain {
     0% { transform: translate(0, 0); }
@@ -409,16 +415,17 @@ html[data-tone="night"] {
     100% { transform: translate(0, 0); }
   }
 
-  /* ───────────────────────── World ───────────────────────── */
+  /* ───────────────────────── Stage ───────────────────────── */
 
-  .world {
+  /* One WebGL canvas over the content; it never takes the pointer. */
+  .stage {
     position: fixed;
     inset: 0;
-    z-index: 0;
+    z-index: 60;
     pointer-events: none;
   }
 
-  .world canvas {
+  .stage canvas {
     display: block;
   }
 
@@ -441,14 +448,6 @@ html[data-tone="night"] {
 
   .nav[data-hidden="true"] {
     transform: translate3d(0, -110%, 0);
-  }
-
-  /* While the hero is still a window on the paper, the nav sits on paper. */
-  html[data-window="true"] .nav {
-    --fg: #121316;
-    --solid-bg: #121316;
-    --solid-fg: #ecebe6;
-    --ghost-bg: rgb(18 19 22 / 0.06);
   }
 
   .nav__logo {
@@ -481,6 +480,95 @@ html[data-tone="night"] {
     display: none;
   }
 
+  .pill--icon {
+    width: 42px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  /* The sound pill says what it's doing, and goes blue while it plays. */
+  .nav__sound[aria-pressed="true"] .snd {
+    color: var(--color-blue);
+  }
+
+  @media (max-width: 639px) {
+    .nav__sound {
+      width: 42px;
+      padding: 0;
+      justify-content: center;
+    }
+
+    .nav__sound .roll {
+      display: none;
+    }
+  }
+
+  /* Sound: four bars, still when off, dancing when on. */
+  .snd {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    height: 14px;
+  }
+
+  .snd i {
+    width: 2px;
+    height: 100%;
+    border-radius: 2px;
+    background: currentColor;
+    transform: scaleY(0.18);
+    transition: transform 0.5s var(--ease);
+  }
+
+  .snd[data-on="true"] i {
+    animation: snd 0.9s ease-in-out infinite alternate;
+  }
+
+  .snd[data-on="true"] i:nth-child(2) {
+    animation-duration: 0.62s;
+    animation-delay: -0.3s;
+  }
+
+  .snd[data-on="true"] i:nth-child(3) {
+    animation-duration: 0.78s;
+    animation-delay: -0.5s;
+  }
+
+  .snd[data-on="true"] i:nth-child(4) {
+    animation-duration: 0.55s;
+    animation-delay: -0.1s;
+  }
+
+  @keyframes snd {
+    from {
+      transform: scaleY(0.25);
+    }
+    to {
+      transform: scaleY(1);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .snd[data-on="true"] i {
+      animation: none;
+      transform: scaleY(0.7);
+    }
+  }
+
+  /* Day/night: a disc, half lit, that turns over. */
+  .thm {
+    width: 15px;
+    height: 15px;
+    border: 1.5px solid currentColor;
+    border-radius: 50%;
+    background: linear-gradient(90deg, currentColor 50%, transparent 50%);
+    transition: transform 0.9s var(--ease-io);
+  }
+
+  .thm[data-theme="dark"] {
+    transform: rotate(180deg);
+  }
+
   @media (min-width: 640px) {
     .nav__talk {
       display: inline-flex;
@@ -496,8 +584,8 @@ html[data-tone="night"] {
     display: grid;
     grid-template-rows: auto 1fr auto;
     padding: 0 var(--gutter) var(--gutter);
-    background: var(--color-paper);
-    color: #121316;
+    background: var(--bg);
+    color: var(--fg);
     clip-path: inset(0 0 100% 0 round 0 0 var(--radius) var(--radius));
     visibility: hidden;
     transition:
@@ -518,11 +606,6 @@ html[data-tone="night"] {
     align-items: center;
     justify-content: space-between;
     height: var(--nav-h);
-  }
-
-  .menu__top .pill {
-    --fg: #121316;
-    --ghost-bg: rgb(18 19 22 / 0.06);
   }
 
   .menu__links {
@@ -559,7 +642,7 @@ html[data-tone="night"] {
 
   .menu__links .mono {
     translate: 0 -0.3em;
-    color: #6c6d72;
+    color: var(--muted);
   }
 
   .menu__foot {
@@ -567,7 +650,7 @@ html[data-tone="night"] {
     flex-wrap: wrap;
     justify-content: space-between;
     gap: 16px;
-    color: #6c6d72;
+    color: var(--muted);
     opacity: 0;
     transition: opacity 0.6s var(--ease);
   }
@@ -578,60 +661,245 @@ html[data-tone="night"] {
   }
 
   .menu__foot a {
-    color: #121316;
+    color: var(--fg);
   }
 
   /* ───────────────────────── Loader ───────────────────────── */
 
+  /* Always a sheet of paper, day or night: it's what gets rubbed away. */
   .loader {
     position: fixed;
     inset: 0;
     z-index: 800;
+    background: #ecebe6;
+    color: #141517;
+    --fg: #141517;
+    overflow: hidden;
+  }
+
+  .loader[data-painted="true"] {
+    background: transparent;
+  }
+
+  .loader__paper,
+  .loader__ink,
+  .loader__crumbs {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* The pencil: its tip sits on the point it's drawing. */
+  .loader__pencil {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 2;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+    filter: drop-shadow(10px 18px 12px rgb(0 0 0 / 0.18));
+  }
+
+  .loader__pencil i {
+    position: absolute;
+    left: 0;
+    top: -11px;
+    width: clamp(220px, 26vw, 380px);
+    height: 22px;
+    transform-origin: 0 50%;
+    rotate: -38deg;
+    clip-path: polygon(0 50%, 13% 0, 100% 0, 100% 100%, 13% 100%);
+    background:
+      linear-gradient(180deg, rgb(255 255 255 / 0.28), transparent 45%, rgb(0 0 0 / 0.18)),
+      linear-gradient(90deg, #2a2b2e 0 4%, #d8b98c 4% 13%, #2448ff 13% 86%, #c9ccd3 86% 90%, #f2f1ec 90%);
+  }
+
+  .loader__tool {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 3;
+    display: flex;
+    width: 120px;
+    height: 50px;
+    margin: -25px 0 0 -60px;
+    pointer-events: none;
+    opacity: 0;
+    filter: drop-shadow(0 16px 18px rgb(0 0 0 / 0.25));
+    will-change: transform;
+  }
+
+  .loader__tool i {
+    flex: 0 0 44%;
+    border-radius: 10px 0 0 10px;
+    background: linear-gradient(180deg, #fbfaf6, #dedcd5);
+  }
+
+  .loader__tool b {
+    flex: 1;
     display: grid;
     place-items: center;
-    background: var(--color-paper);
-    color: #121316;
-    border-radius: 0 0 var(--radius) var(--radius);
+    border-radius: 3px 10px 10px 3px;
+    border-bottom: 5px solid #2448ff;
+    background: #141517;
+    color: #ecebe6;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.04em;
   }
 
-  .intro-skip .loader[data-state="idle"] {
-    display: none;
+  .loader__ui {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    padding: 0 var(--gutter) var(--gutter);
+    pointer-events: none;
+    transition: opacity 0.45s var(--ease);
   }
 
-  .loader__bar {
-    width: 88px;
-    height: 3px;
-    overflow: hidden;
-    border-radius: 3px;
-    background: rgb(18 19 22 / 0.12);
+  .loader[data-phase="exit"] .loader__ui {
+    opacity: 0;
   }
 
-  .loader__bar i {
-    display: block;
-    height: 100%;
-    background: #121316;
-    transform-origin: left;
-    transform: scaleX(0);
-  }
-
-  .loader__count {
+  .loader__brand {
     position: absolute;
     left: var(--gutter);
-    bottom: calc(var(--gutter) * 0.4);
-    display: flex;
-    overflow: clip;
-    font-family: var(--font-mono);
-    font-size: clamp(4.5rem, 16vw, 15rem);
-    font-weight: 400;
-    letter-spacing: -0.06em;
-    line-height: 0.9;
+    top: 22px;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.05em;
   }
 
-  .loader__note {
+  .loader__tag {
+    position: absolute;
+    right: var(--gutter);
+    top: 28px;
+    color: #6c6d72;
+  }
+
+  .loader__steps {
+    position: absolute;
+    left: var(--gutter);
+    bottom: var(--gutter);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    color: #6c6d72;
+  }
+
+  .loader__steps li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: color 0.4s var(--ease);
+  }
+
+  .loader__steps li::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border: 1px solid currentColor;
+    border-radius: 50%;
+    transition: background-color 0.4s var(--ease);
+  }
+
+  .loader__steps li[data-done="true"] {
+    color: #141517;
+  }
+
+  .loader__steps li[data-done="true"]::before {
+    background: #2448ff;
+    border-color: #2448ff;
+  }
+
+  .loader__tip {
     position: absolute;
     right: var(--gutter);
     bottom: var(--gutter);
     color: #6c6d72;
+  }
+
+  .loader__gate {
+    position: absolute;
+    left: 50%;
+    bottom: max(9vh, 90px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    translate: -50% 0;
+    pointer-events: auto;
+    animation: gate-in 0.9s var(--ease) both;
+  }
+
+  .loader__enter {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    height: 64px;
+    padding: 0 34px;
+    border: 0;
+    border-radius: 999px;
+    background: #141517;
+    color: #ecebe6;
+    font: inherit;
+    font-size: 18px;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+    cursor: pointer;
+    box-shadow: 0 18px 40px -16px rgb(20 21 23 / 0.6);
+    transition:
+      transform 0.5s var(--ease),
+      background-color 0.4s var(--ease);
+  }
+
+  .loader__enter:hover {
+    transform: scale(1.05);
+    background: #2448ff;
+  }
+
+  .loader__enter .snd {
+    height: 16px;
+  }
+
+  .loader__quiet {
+    padding: 6px;
+    border: 0;
+    background: none;
+    color: #6c6d72;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .loader__quiet:hover {
+    color: #141517;
+  }
+
+  @keyframes gate-in {
+    from {
+      opacity: 0;
+      transform: translateY(24px) scale(0.96);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .loader {
+      display: none;
+    }
+  }
+
+  @media (max-width: 639px) {
+    .loader__tag,
+    .loader__tip,
+    .loader[data-phase="gate"] .loader__steps {
+      display: none;
+    }
   }
 
   /* ───────────────────────── Transition ───────────────────────── */

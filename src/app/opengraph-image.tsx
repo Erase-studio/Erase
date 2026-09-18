@@ -1,10 +1,10 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "Erase: we turn templates to dust.";
+export const alt = "Erase: nothing generic survives here.";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-// A fixed scatter of grains drifting off the right edge, so the card matches the site.
+// A scatter of blue and paper flecks on graphite, echoing the hero window.
 const grains = Array.from({ length: 260 }, (_, i) => {
   const a = Math.sin(i * 12.9898) * 43758.5453;
   const b = Math.sin(i * 78.233) * 12543.123;
@@ -51,8 +51,8 @@ export default function OpengraphImage() {
           <span>Independent design & development studio</span>
         </div>
         <div style={{ display: "flex", flexDirection: "column", fontSize: 120, fontWeight: 500, lineHeight: 0.95, letterSpacing: -6 }}>
-          <span>We turn templates</span>
-          <span>to dust.</span>
+          <span>Nothing generic</span>
+          <span>survives here.</span>
         </div>
       </div>
     ),

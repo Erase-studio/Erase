@@ -1,19 +1,21 @@
 import { Hero } from "@/components/home/Hero";
-import { Manifesto } from "@/components/home/Manifesto";
-import { StudioIntro } from "@/components/home/StudioIntro";
-import { WorkGallery } from "@/components/home/WorkGallery";
+import { Statement } from "@/components/home/Statement";
+import { Crumple } from "@/components/home/Crumple";
+import { WorkStack } from "@/components/home/WorkStack";
 import { ServiceRows } from "@/components/home/ServiceRows";
 import { ProcessPath } from "@/components/home/ProcessPath";
+import { Dive } from "@/components/home/Dive";
 
 export default function Home() {
   return (
     <main id="main">
       <Hero />
-      <Manifesto />
-      <StudioIntro />
-      <WorkGallery />
+      <Statement />
+      <Crumple />
+      <WorkStack />
       <ServiceRows />
       <ProcessPath />
+      <Dive />
     </main>
   );
 }

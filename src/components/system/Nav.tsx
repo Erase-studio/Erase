@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 import { site } from "@/content/site";
 import { TransitionLink } from "./TransitionLink";
 import { Roll } from "@/components/ui/Roll";
+import { SoundToggle, ThemeToggle } from "./Toggles";
+import { sound } from "@/lib/sound";
 
 const links = [
   { href: "/", label: "Home" },
@@ -14,7 +16,7 @@ const links = [
   { href: "/contact", label: "Contact" },
 ];
 
-/** Wordmark left, two pills right. Slides away on the way down, back on the way up. */
+/** Wordmark left; talk, sound, day/night and menu right. Slides away on the way down, back on the way up. */
 export function Nav() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -67,6 +69,7 @@ export function Nav() {
   }, [open]);
 
   const toggle = () => {
+    sound.whoosh(0.6, 0.6, open ? -0.4 : 0.4);
     setOpenedAt(pathname);
     setOpen((o) => !o);
   };
@@ -83,6 +86,8 @@ export function Nav() {
             <Roll>Let’s talk</Roll>
             <i className="pill__dot" aria-hidden="true" />
           </TransitionLink>
+          <SoundToggle label className="nav__sound" />
+          <ThemeToggle />
           <button ref={toggleRef} type="button" className="pill" aria-expanded={open} aria-controls="site-menu" onClick={toggle}>
             <Roll>Menu</Roll>
             <span className="pill__dots" aria-hidden="true">

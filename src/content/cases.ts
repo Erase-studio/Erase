@@ -15,23 +15,23 @@ export type CaseStudy = {
 
 export const cases: Record<string, CaseStudy> = {
   erase: {
-    lede: "Our own site. It opens on the website every agency ships, drawn in dust, and lets you tear through it.",
+    lede: "Our own site: a desk of real tools you can push around, a pencil line that runs the whole page, and the template, crumpled.",
     problem: { title: "Every agency site says the same thing.", body: "Gradient blob. Logo wall. “Digital experiences.”" },
-    idea: { title: "Turn the template to dust.", body: "One world of particles that becomes whatever each section needs." },
-    quote: "Don’t say it’s different. Show the template falling apart.",
+    idea: { title: "Show the craft, literally.", body: "Erasers, pencils and paper, built in 3D and simulated." },
+    quote: "Don’t say it’s different. Crumple the template in front of them.",
     decisions: [
-      { title: "One world", body: "A single WebGL scene behind every page." },
-      { title: "Dust as material", body: "Every shape is the same grains, re-formed." },
-      { title: "Day and night", body: "Charcoal on paper, light in the dark." },
+      { title: "Things, not effects", body: "Solid objects with weight you can shove." },
+      { title: "One line", body: "A pencil draws through every page." },
+      { title: "Paper that behaves", body: "It creases, curls and casts shadows." },
       { title: "Type stays quiet", body: "Small labels, few words, big air." },
     ],
     palette: [
       { name: "Paper", hex: "#ECEBE6" },
-      { name: "Graphite", hex: "#0B0C0E" },
-      { name: "Erase blue", hex: "#3D63FF" },
-      { name: "Charcoal", hex: "#121316" },
+      { name: "Graphite", hex: "#141517" },
+      { name: "Erase blue", hex: "#2448FF" },
+      { name: "Mist", hex: "#B9BCC4" },
     ],
-    type: { name: "Mona Sans", sample: "We turn templates to dust.", note: "wght 500 · Geist Mono for labels" },
+    type: { name: "Mona Sans", sample: "Nothing generic survives here.", note: "wght 500 · Geist Mono for labels" },
   },
   "khumbu-route": {
     lede: "A Himalayan trekking site that sells the route: its altitude, its days, its price.",

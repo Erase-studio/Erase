@@ -7,7 +7,7 @@ export function Faq({ items }: { items: { q: string; a: string }[] }) {
   const [open, setOpen] = useState(0);
   const uid = useId();
   return (
-    <section className="faq frame" data-scene="quiet" aria-labelledby={`${uid}-title`}>
+    <section className="faq frame" aria-labelledby={`${uid}-title`}>
       <header className="faq__head">
         <p className="mono muted" data-reveal="fade">
           Questions
