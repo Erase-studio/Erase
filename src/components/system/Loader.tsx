@@ -257,6 +257,8 @@ export function Loader() {
       let drawn = 0;
       let crossDrawn = 0;
       let last: Seg | null = null;
+      let prevTip: [number, number] | null = null;
+      let prevT = performance.now();
       await tween(ms, (t) => {
         const want = Math.floor(main.length * Math.min(1, t / 0.78));
         for (; drawn < want; drawn++) stroke((last = main[drawn]), 0.5 + rnd() * 0.3, 1.3 + rnd() * 1.1);
@@ -264,7 +266,14 @@ export function Loader() {
           const cw = Math.floor(cross.length * Math.min(1, (t - 0.6) / 0.4));
           for (; crossDrawn < cw; crossDrawn++) stroke((last = cross[crossDrawn]), 0.25 + rnd() * 0.2, 1 + rnd() * 0.8);
         }
-        if (last) tip(last[2], last[3]);
+        if (last) {
+          tip(last[2], last[3]);
+          // The pencil is heard as it shades.
+          const now = performance.now();
+          if (prevTip) sound.write(Math.hypot(last[2] - prevTip[0], last[3] - prevTip[1]) / Math.max(1, now - prevT) * 400);
+          prevTip = [last[2], last[3]];
+          prevT = now;
+        }
       });
       // Two loose outline passes.
       ictx.font = font();

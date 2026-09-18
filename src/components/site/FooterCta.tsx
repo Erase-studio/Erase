@@ -15,7 +15,7 @@ export function FooterCta() {
       <p className="mono muted" data-reveal="fade">
         (End) Start a project
       </p>
-      <h2 className="fc__big" data-reveal="lines">
+      <h2 className="fc__big" data-warp data-reveal="lines">
         Got a{" "}
         <span className="fc__mark" data-line="-0.04,0.5,0;0.14,0.34,20;0.3,0.66,0;0.48,0.36,20;0.66,0.64,0;0.84,0.38,20;1.04,0.52,0">
           template?

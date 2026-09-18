@@ -129,7 +129,7 @@ export function ProcessPath() {
       <div className="pr__sticky frame">
         <header className="pr__head">
           <p className="mono muted">(04) How a project runs</p>
-          <h2 id="proc-title" className="pr__h">
+          <h2 id="proc-title" className="pr__h" data-warp>
             Four stops.
             <br />
             No surprises.

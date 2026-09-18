@@ -26,10 +26,6 @@ export function Footer() {
           <div className="fb__about">
             <p className="mono muted">Studio</p>
             <p className="fb__lead">An independent design &amp; development studio. We draw every site for one brand and build it by hand.</p>
-            <p className="avail mono">
-              <i aria-hidden="true" />
-              {site.availability}
-            </p>
           </div>
           <nav aria-label="Footer">
             <p className="mono muted">Pages</p>

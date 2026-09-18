@@ -68,24 +68,6 @@
     border-radius: 999px;
   }
 
-  .avail {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    height: 42px;
-    padding-inline: 16px;
-    border-radius: 999px;
-    background: var(--ghost-bg);
-  }
-
-  .avail i {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: #3ecf8e;
-    box-shadow: 0 0 0 4px rgb(62 207 142 / 0.2);
-  }
-
   .pill--lg {
     height: 54px;
     padding-inline: 26px;

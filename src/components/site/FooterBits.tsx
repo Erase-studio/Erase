@@ -55,7 +55,7 @@ export function FooterWord() {
   }, []);
   return (
     <div ref={ref} className="fb__word" data-in="false" aria-hidden="true">
-      <span className="fb__letters">
+      <span className="fb__letters" data-warp>
         {"Erase".split("").map((c, i) => (
           <span key={i} style={{ "--i": i } as React.CSSProperties}>
             {c}

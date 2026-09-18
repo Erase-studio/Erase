@@ -22,7 +22,7 @@ export function CaseStudy({ item, data, next, index }: { item: Work; data: CaseD
             {n(index + 1)} / {n(work.length)}
           </p>
         </div>
-        <h1 className="cs-hero__title" data-reveal="lines" data-delay="0.1">
+        <h1 className="cs-hero__title" data-warp data-reveal="lines" data-delay="0.1">
           {item.title}
         </h1>
         <div className="cs-hero__row">

@@ -17,7 +17,7 @@ export function PageHead({
       <p className="mono muted" data-reveal="fade" data-delay="0.2">
         {index}
       </p>
-      <h1 className="ph__title" data-reveal="lines" data-delay="0.1" data-line="-0.03,1.02,0;0.3,1.08,60;0.7,1.0,0;1.04,1.06,0">
+      <h1 className="ph__title" data-warp data-reveal="lines" data-delay="0.1" data-line="-0.03,1.02,0;0.3,1.08,60;0.7,1.0,0;1.04,1.06,0">
         {title}
       </h1>
       <div className="ph__row">

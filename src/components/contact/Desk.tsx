@@ -56,13 +56,6 @@ export function Desk() {
         <dt className="mono muted">Then</dt>
         <dd>A short call, a clear proposal, then we start.</dd>
       </div>
-      <div>
-        <dt className="mono muted">Right now</dt>
-        <dd className="avail">
-          <i aria-hidden="true" />
-          {site.availability}
-        </dd>
-      </div>
     </dl>
   );
 }

@@ -10,7 +10,6 @@ export const site = {
   description:
     "Erase is a web design and development agency. We design, build and grow high-performance websites for ambitious brands.",
   tagline: "Web design & development agency",
-  availability: "Booking projects now", // REPLACE when you're full
   based: "Nepal",
   // Only rendered when a URL is present.
   social: [

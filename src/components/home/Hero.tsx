@@ -19,7 +19,7 @@ export function Hero() {
           </TransitionLink>
         </div>
       </div>
-      <div className="hero__window" data-view="hero">
+      <div className="hero__window" data-view="hero" data-cursor-label="Push · Click">
         <p className="hero__tag mono">Erase · Independent studio</p>
         <p className="hero__hint mono">
           <span className="hero__hint-dot" aria-hidden="true" />

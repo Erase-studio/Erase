@@ -6,7 +6,7 @@ import { StrikeList } from "./StrikeList";
 export function Statement() {
   return (
     <section className="st frame" data-sound="statement" aria-labelledby="st-title">
-      <h2 id="st-title" className="st__title" data-reveal="lines">
+      <h2 id="st-title" className="st__title" data-warp data-reveal="lines">
         Nothing{" "}
         <span className="st__strike" data-line="-0.05,0.58,0;0.35,0.5,40;0.7,0.56,-20;1.05,0.47,0">
           generic

@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { pixelCamera, type Frame, type Shared, type View } from "./Stage";
 import { materials, PALETTE, pencilBodyGeometry, pencilTipGeometry } from "./objects";
+import { sound } from "@/lib/sound";
 
 /**
  * Graphite strokes, drawn by a pencil as you scroll. Each element with
@@ -133,7 +134,9 @@ export class LineView implements View {
     const open = !!window.__eraseLoaded && !window.__erasePT;
     const tipY = f.reduced ? Infinity : open ? Math.max(f.scrollY + f.vh * 0.7, f.vh * 0.92) : -Infinity;
     let active: Stroke | null = null;
+    let drawing = 0;
     for (const s of this.strokes) {
+      const before = s.u;
       let target = 0;
       for (const p of s.samples) {
         if (p.reach > tipY) break;
@@ -153,7 +156,10 @@ export class LineView implements View {
       s.caps[1].position.copy(s.curve.getPointAt(Math.max(0.0005, s.u)));
       s.caps[0].visible = s.caps[1].visible = drawn > 0;
       if (!active && s.u > 0.002 && s.u < 0.998) active = s;
+      drawing = Math.max(drawing, ((s.u - before) * s.length) / Math.max(f.dt, 1e-3));
     }
+    // Lead on paper, as fast as the line is growing (drawing forward only).
+    if (drawing > 30 && !f.reduced) sound.write(drawing);
 
     // The pencil rides whichever stroke is being drawn, and lifts away between them.
     if (active) this.last = { stroke: active, u: active.u };

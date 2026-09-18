@@ -14,8 +14,11 @@
  *           sleeve adds a papery tap. Not musical: physical.
  *   Paper   crinkle as the template is crumpled, a soft whoosh when it's
  *           thrown; posters rustle as they peel and flick as they land.
- *   Pencil  a faint graphite-on-paper scratch while the process sheet draws.
- *   Rubber  erasing is soft rubber friction with the odd crumb, never loud.
+ *   Pencil  wherever a pencil writes on the site (the strokes, the loader,
+ *           the process sheet, the service sketches, strike-throughs), you
+ *           hear lead on paper: grit, not hiss, following the pencil's speed.
+ *   Rubber  erasing is rubber dragging on paper, juddering a little as it
+ *           sticks and slips, with the odd crumb. Never loud.
  *   Dive    its own pad that opens as the window grows; the wireframes ring
  *           in as they're drawn; a warm rising air in flight with soft crumbs
  *           as templates go; a real rub-through hit on every cliché; minor
@@ -75,8 +78,10 @@ class Sound {
   private resolved = false;
   private crackleBudget = 0;
   // Textures
-  private rubBus!: Bus;
-  private writeBus!: Bus;
+  private rubBus!: Bus & { src: AudioBufferSourceNode; chatter: OscillatorNode };
+  private writeBus!: Bus & { src: AudioBufferSourceNode };
+  private grit!: AudioBuffer;
+  private lastStrike = 0;
   private lastReveal = 0;
   // Rate limits
   private knockBudget = 8;
@@ -184,6 +189,19 @@ class Sound {
     const nd = this.noise.getChannelData(0);
     for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
 
+    // Grit: what graphite and rubber actually sound like on paper. Not a smooth
+    // hiss but a faint bed of noise studded with tiny clicks, each the lead (or
+    // the rubber) catching on a fibre of the paper's tooth.
+    this.grit = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+    const gd = this.grit.getChannelData(0);
+    for (let i = 0; i < gd.length; i++) gd[i] += (Math.random() * 2 - 1) * 0.1;
+    for (let i = 0; i < gd.length; i++) {
+      if (Math.random() > 0.014) continue;
+      const amp = (0.25 + Math.random() ** 2 * 0.75) * (Math.random() < 0.5 ? -1 : 1);
+      const tail = 3 + Math.floor(Math.random() * 14);
+      for (let k = 0; k < tail && i + k < gd.length; k++) gd[i + k] += amp * Math.exp(-k / (tail * 0.35)) * (k % 2 ? -0.6 : 1);
+    }
+
     // Room: stereo decaying noise that darkens as it fades, after a short pre-delay.
     const conv = ctx.createConvolver();
     const len = Math.floor(ctx.sampleRate * 3.4);
@@ -210,19 +228,46 @@ class Sound {
     this.buildScore();
     this.buildDive();
 
-    // Rubbing: soft, low-mid rubber friction. No squeak, no hiss.
-    this.rubBus = { ...this.bus([["highpass", 260, 0.7], ["bandpass", 700, 0.55], ["lowpass", 1600, 0.7]]), last: 0 };
-    // Writing: graphite on paper, fine and quiet.
-    this.writeBus = { ...this.bus([["bandpass", 2400, 0.8], ["lowpass", 5200, 0.7]]), last: 0 };
+    // Rubbing: the grit played slow and dark (rubber drags, it doesn't scratch),
+    // through a VCA that judders: rubber sticks and slips as it goes.
+    {
+      const b = this.bus([["highpass", 180, 0.7], ["bandpass", 560, 0.5], ["lowpass", 1350, 0.7]], this.grit, 0.4);
+      const vca = ctx.createGain();
+      vca.gain.value = 0.75;
+      const chatter = ctx.createOscillator();
+      chatter.type = "triangle";
+      chatter.frequency.value = 22;
+      const depth = ctx.createGain();
+      depth.gain.value = 0.3;
+      chatter.connect(depth).connect(vca.gain);
+      chatter.start();
+      b.gain.disconnect();
+      b.gain.connect(vca).connect(this.master);
+      this.rubBus = { ...b, last: 0, chatter };
+    }
+    // Writing: the grit at speed, the lead's scratch with a little wooden body under it.
+    {
+      const b = this.bus([["highpass", 650, 0.6], ["bandpass", 2600, 0.45], ["lowpass", 6000, 0.6]], this.grit, 1);
+      const body = ctx.createBiquadFilter();
+      body.type = "peaking";
+      body.frequency.value = 1100;
+      body.Q.value = 1.2;
+      body.gain.value = 5;
+      b.gain.disconnect();
+      b.gain.connect(body).connect(this.master);
+      this.writeBus = { ...b, last: 0 };
+    }
 
     // Anything that stops being driven fades out; the score keeps its own time.
     this.watchdog = window.setInterval(() => this.heartbeat(), 110);
   }
 
   /** Looping noise through a chain of filters into a silent gain: a texture driven every frame. */
-  private bus(chain: [BiquadFilterType, number, number][]) {
+  private bus(chain: [BiquadFilterType, number, number][], buffer?: AudioBuffer, rate = 1) {
     const ctx = this.ctx!;
-    let head: AudioNode = this.loop();
+    const src = this.loop(buffer);
+    src.playbackRate.value = rate;
+    let head: AudioNode = src;
     let filter!: BiquadFilterNode;
     chain.forEach(([type, f, q]) => {
       const b = ctx.createBiquadFilter();
@@ -236,12 +281,12 @@ class Sound {
     const gain = ctx.createGain();
     gain.gain.value = 0;
     head.connect(gain).connect(this.master);
-    return { filter, gain };
+    return { filter, gain, src };
   }
 
-  private loop() {
+  private loop(buffer?: AudioBuffer) {
     const s = this.ctx!.createBufferSource();
-    s.buffer = this.noise;
+    s.buffer = buffer ?? this.noise;
     s.loop = true;
     s.start(0, Math.random() * 1.9);
     return s;
@@ -652,32 +697,53 @@ class Sound {
     }
   }
 
-  /** The process sheet's pencil moving (px/s): a faint graphite scratch that follows it. */
+  /**
+   * A pencil moving on paper, at `speed` px/s: call every frame it writes, from
+   * anywhere on the site. Faster strokes catch more of the paper's tooth, so
+   * the grit runs faster and a little brighter; slow ones are a soft scratch.
+   */
   write(speed: number) {
     if (!this.live) return;
     const b = this.writeBus;
     b.last = performance.now();
     const t = this.ctx!.currentTime;
-    const v = Math.min(1, speed / 520);
-    // The paper's tooth: the level and colour flutter from moment to moment.
-    b.gain.gain.setTargetAtTime(0.03 * v * (0.55 + Math.random() * 0.9), t, 0.02);
-    b.filter.frequency.setTargetAtTime(1900 + v * 900 + Math.random() * 400, t, 0.03);
+    const v = Math.min(1, speed / 700);
+    b.src.playbackRate.setTargetAtTime(0.55 + v * 0.75, t, 0.04);
+    b.gain.gain.setTargetAtTime(0.22 * Math.sqrt(v) * (0.75 + Math.random() * 0.5), t, 0.025);
+    b.filter.frequency.setTargetAtTime(1900 + v * 1500, t, 0.05);
   }
 
-  /** Call every frame you're rubbing: speed in px/s, pressure 0..1.2. Soft rubber friction, the odd crumb. */
+  /** A quick pencil strike-through: one firm stroke across a word. */
+  strike() {
+    if (!this.live) return;
+    const now = performance.now();
+    if (now - this.lastStrike < 90) return;
+    this.lastStrike = now;
+    const b = this.writeBus;
+    const t = this.ctx!.currentTime;
+    b.last = now + 380;
+    b.src.playbackRate.setTargetAtTime(1.25, t, 0.02);
+    b.gain.gain.cancelScheduledValues(t);
+    b.gain.gain.setTargetAtTime(0.28, t, 0.02);
+    b.gain.gain.setTargetAtTime(0, t + 0.3, 0.05);
+  }
+
+  /** Call every frame you're rubbing: speed in px/s, pressure 0..1.2. Rubber dragging on paper, and the odd crumb. */
   rub(speed: number, pressure: number) {
     if (!this.live) return;
     const b = this.rubBus;
     b.last = performance.now();
     const t = this.ctx!.currentTime;
     const v = Math.min(1, speed / 1600);
-    b.gain.gain.setTargetAtTime(0.13 * v * pressure * (0.8 + Math.random() * 0.4), t, 0.035);
-    b.filter.frequency.setTargetAtTime(520 + v * 380, t, 0.05);
-    if (v > 0.2 && Math.random() < v * 0.12) {
+    b.gain.gain.setTargetAtTime(0.5 * Math.sqrt(v) * pressure, t, 0.04);
+    b.src.playbackRate.setTargetAtTime(0.3 + v * 0.35, t, 0.05);
+    b.chatter.frequency.setTargetAtTime(14 + v * 26 + Math.random() * 6, t, 0.05);
+    b.filter.frequency.setTargetAtTime(420 + v * 360, t, 0.05);
+    if (v > 0.2 && Math.random() < v * 0.1) {
       const out = this.ctx!.createStereoPanner();
       out.pan.value = Math.random() * 0.6 - 0.3;
       out.connect(this.master);
-      this.noiseHit(t, "bandpass", 1400 + Math.random() * 900, 1.5, 0.012 + Math.random() * 0.012, 0.01, out);
+      this.noiseHit(t, "bandpass", 1300 + Math.random() * 800, 1.5, 0.01 + Math.random() * 0.012, 0.01, out);
     }
   }
 

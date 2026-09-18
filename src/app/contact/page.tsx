@@ -17,7 +17,7 @@ export default function ContactPage() {
           <p className="mono muted" data-reveal="fade" data-delay="0.2">
             (Contact) Write to us
           </p>
-          <h1 id="ct-title" className="ct__title" data-reveal="lines" data-delay="0.1">
+          <h1 id="ct-title" className="ct__title" data-warp data-reveal="lines" data-delay="0.1">
             No forms.
             <br />
             Write us a letter.

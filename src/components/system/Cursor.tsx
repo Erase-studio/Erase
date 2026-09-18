@@ -3,138 +3,239 @@
 import { useEffect, useRef } from "react";
 
 /**
- * Dot + ring. The ring stretches along its direction of travel, wraps itself
- * around buttons ("stick"), grows into a label on [data-cursor-label] targets,
- * and steps aside where the page draws its own pointer. Fine pointers only.
+ * The cursor is a pencil and an eraser.
+ *
+ *   Pencil   a lead tip that leaves a faint graphite trail, which rubs itself
+ *            away behind you. Drawn with difference blending, so it reads on
+ *            paper, on graphite and on blue alike.
+ *   Eraser   over anything you can press, the pencil flips into a small eraser
+ *            that tilts with your movement; buttons lean toward it (magnetic).
+ *   Lens     over a big headline [data-warp], the tip opens into a lens that
+ *            inverts what's under it, and the letters nearest you swell in
+ *            weight and width (Mona Sans is variable).
+ *   Label    over [data-cursor-label] (posters, the hero heap), a blue tag.
+ *
+ * Fine pointers only; reduced motion keeps a plain tip with no trail or warp.
  */
+
+type Char = { el: HTMLElement; x: number; y: number; c: number };
+type Warp = { el: HTMLElement; chars: Char[]; base: number };
+
+const TRAIL_LIFE = 460; // ms a pencil mark lasts before it's rubbed away
+const WARP_R = 170; // px around the cursor where letters swell
+
 export function Cursor() {
-  const dotRef = useRef<HTMLDivElement>(null);
-  const ringRef = useRef<HTMLDivElement>(null);
-  const stretchRef = useRef<HTMLDivElement>(null);
-  const shapeRef = useRef<HTMLDivElement>(null);
-  const labelRef = useRef<HTMLSpanElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const inkRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fine = window.matchMedia("(hover: hover) and (pointer: fine)");
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (!fine.matches) return;
-
-    const dot = dotRef.current!;
-    const ring = ringRef.current!;
-    const stretch = stretchRef.current!;
-    const shape = shapeRef.current!;
-    const label = labelRef.current!;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const root = rootRef.current!;
+    const ink = inkRef.current!;
+    const canvas = ink.querySelector("canvas")!;
+    const ctx = canvas.getContext("2d")!;
+    const tipEl = ink.querySelector<HTMLElement>(".cur__tip")!;
+    const eraser = root.querySelector<HTMLElement>(".cur__eraser")!;
+    const tag = root.querySelector<HTMLElement>(".cur__tag")!;
+    const tagText = tag.querySelector("span")!;
     const html = document.documentElement;
     html.classList.add("has-cursor");
 
-    const pos = { x: -100, y: -100 };
-    const target = { x: -100, y: -100 };
-    const ringPos = { x: -100, y: -100 };
-    let stuck: HTMLElement | null = null;
+    let dpr = 1;
+    const size = () => {
+      dpr = Math.min(1.5, window.devicePixelRatio || 1);
+      canvas.width = Math.round(window.innerWidth * dpr);
+      canvas.height = Math.round(window.innerHeight * dpr);
+    };
+    size();
+
+    const pos = { x: -200, y: -200 };
+    const tip = { x: -200, y: -200 };
+    const er = { x: -200, y: -200, a: 0 };
+    const tg = { x: -200, y: -200 };
+    const trail: { x: number; y: number; t: number }[] = [];
+    let state = "default";
     let visible = false;
-    let currentLabel = "";
+    let magnet: HTMLElement | null = null;
     let raf = 0;
+    let lastMove = 0;
 
-    const setSize = (w: number | null, h?: number) => {
-      if (w === null) {
-        shape.style.width = "";
-        shape.style.height = "";
-        shape.style.borderRadius = "";
-        return;
+    // ─── Letters that swell ───
+    const warps = new Map<HTMLElement, Warp>();
+    const wrap = (el: HTMLElement): Warp => {
+      if (!el.querySelector(".wc")) {
+        const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+        const nodes: Text[] = [];
+        while (walker.nextNode()) nodes.push(walker.currentNode as Text);
+        for (const n of nodes) {
+          const text = n.textContent ?? "";
+          if (!text.trim()) continue;
+          const frag = document.createDocumentFragment();
+          for (const ch of text) {
+            if (ch === " " || ch === "\n") frag.append(ch);
+            else {
+              const s = document.createElement("span");
+              s.className = "wc";
+              s.textContent = ch;
+              frag.append(s);
+            }
+          }
+          n.replaceWith(frag);
+        }
       }
-      shape.style.width = `${w}px`;
-      shape.style.height = `${h}px`;
-      shape.style.borderRadius = `${Math.min(h!, w) / 2}px`;
+      const chars = [...el.querySelectorAll<HTMLElement>(".wc")].map((c) => ({ el: c, x: 0, y: 0, c: 0 }));
+      const w = { el, chars, base: parseInt(getComputedStyle(el).fontWeight) || 500 };
+      warps.set(el, w);
+      return w;
+    };
+    const warpTargets = () => [...document.querySelectorAll<HTMLElement>("[data-warp]")];
+    let targets = warpTargets();
+    const refresh = window.setInterval(() => (targets = warpTargets()), 1200);
+
+    const stepWarp = () => {
+      let moving = false;
+      for (const el of targets) {
+        const r = el.getBoundingClientRect();
+        const near = !reduced && pos.x > r.left - WARP_R && pos.x < r.right + WARP_R && pos.y > r.top - WARP_R && pos.y < r.bottom + WARP_R;
+        let w = warps.get(el);
+        if (!w && !near) continue;
+        if (!w || !w.chars[0]?.el.isConnected) w = wrap(el);
+        // Read every position first, then write, so the page lays out once.
+        for (const ch of w.chars) {
+          const b = ch.el.getBoundingClientRect();
+          ch.x = b.left + b.width / 2;
+          ch.y = b.top + b.height / 2;
+        }
+        for (const ch of w.chars) {
+          const d = near ? Math.hypot(ch.x - pos.x, ch.y - pos.y) : Infinity;
+          const t = d < WARP_R ? (1 - d / WARP_R) ** 2 : 0;
+          ch.c += (t - ch.c) * 0.2;
+          if (Math.abs(t - ch.c) > 0.002) moving = true;
+          if (ch.c < 0.003) {
+            if (ch.el.style.fontVariationSettings) ch.el.style.fontVariationSettings = "";
+            continue;
+          }
+          ch.el.style.fontVariationSettings = `"wght" ${Math.min(900, w.base + 360 * ch.c).toFixed(0)}, "wdth" ${(100 + 22 * ch.c).toFixed(1)}`;
+        }
+      }
+      return moving;
     };
 
-    const render = () => {
-      if (stuck) {
-        const r = stuck.getBoundingClientRect();
-        target.x = r.left + r.width / 2 + (pos.x - (r.left + r.width / 2)) * 0.12;
-        target.y = r.top + r.height / 2 + (pos.y - (r.top + r.height / 2)) * 0.12;
-      } else {
-        target.x = pos.x;
-        target.y = pos.y;
+    // ─── What the pointer is over ───
+    const classify = (t: Element | null) => {
+      if (!t) return "default";
+      if (t.closest("[data-cursor='hide']")) return "hide";
+      if (t.closest("input, textarea, select, [contenteditable='true']")) return "text";
+      const lab = t.closest<HTMLElement>("[data-cursor-label]");
+      if (lab) {
+        tagText.textContent = lab.dataset.cursorLabel ?? "";
+        return "label";
       }
-      const k = reduced ? 1 : 0.18;
-      const dx = target.x - ringPos.x;
-      const dy = target.y - ringPos.y;
-      ringPos.x += dx * k;
-      ringPos.y += dy * k;
-      dot.style.transform = `translate3d(${pos.x}px, ${pos.y}px, 0)`;
-      ring.style.transform = `translate3d(${ringPos.x}px, ${ringPos.y}px, 0)`;
-
-      // Squash and stretch along the direction of travel.
-      const speed = Math.min(Math.hypot(dx, dy), 160);
-      if (!stuck && !reduced && speed > 0.5) {
-        const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
-        const s = speed / 160;
-        stretch.style.transform = `rotate(${angle}deg) scale(${1 + s * 0.7}, ${1 - s * 0.35})`;
-      } else {
-        stretch.style.transform = "";
-      }
-      raf = requestAnimationFrame(render);
+      if (t.closest("a[href], button, [role='button'], label, summary")) return "press";
+      if (t.closest("[data-warp]")) return "lens";
+      return "default";
     };
-    raf = requestAnimationFrame(render);
 
-    const onMove = (e: PointerEvent | { pointerType: string; clientX: number; clientY: number; target: EventTarget | null }) => {
+    const setState = (s: string) => {
+      if (s === state) return;
+      state = s;
+      html.dataset.cursor = s;
+    };
+
+    const onMove = (e: PointerEvent) => {
       if (e.pointerType !== "mouse") return;
       pos.x = e.clientX;
       pos.y = e.clientY;
+      lastMove = performance.now();
       if (!visible) {
         visible = true;
-        ringPos.x = pos.x;
-        ringPos.y = pos.y;
+        tip.x = er.x = tg.x = pos.x;
+        tip.y = er.y = tg.y = pos.y;
+        html.dataset.cursorVisible = "true";
       }
-      // Re-asserted on every move, so nothing can leave the cursor switched off.
-      if (html.dataset.cursorVisible !== "true") html.dataset.cursorVisible = "true";
-      const t = e.target as Element | null;
-      const hideZone = t?.closest?.("[data-cursor='hide']");
-      const labelled = t?.closest?.<HTMLElement>("[data-cursor-label]");
-      const btn = t?.closest?.<HTMLElement>(".pill");
-      const interactive = t?.closest?.("a, button, input, textarea, select, label, [role='button']");
-
-      const next = labelled?.dataset.cursorLabel ?? "";
-      if (next !== currentLabel) {
-        currentLabel = next;
-        label.textContent = next;
-      }
-
-      if (btn && !labelled && !hideZone) {
-        if (stuck !== btn) {
-          stuck = btn;
-          const r = btn.getBoundingClientRect();
-          setSize(r.width + 14, r.height + 14);
+      setState(classify(e.target as Element | null));
+      if (state === "default" && !reduced) trail.push({ x: pos.x, y: pos.y, t: lastMove });
+      // Buttons lean toward the pointer.
+      const m = (e.target as Element | null)?.closest?.<HTMLElement>(".pill, .nav__logo, .eb");
+      if (m !== magnet) {
+        if (magnet) {
+          magnet.dataset.magnet = "off";
+          magnet.style.translate = "";
         }
-        html.dataset.cursor = "stick";
-        return;
+        magnet = reduced ? null : (m ?? null);
+        if (magnet) magnet.dataset.magnet = "on";
       }
-      if (stuck) {
-        stuck = null;
-        setSize(null);
+      if (magnet) {
+        const r = magnet.getBoundingClientRect();
+        const dx = pos.x - (r.left + r.width / 2);
+        const dy = pos.y - (r.top + r.height / 2);
+        magnet.style.translate = `${(dx * 0.22).toFixed(1)}px ${(dy * 0.32).toFixed(1)}px`;
       }
-      html.dataset.cursor = hideZone ? "hide" : next ? "label" : interactive ? "hover" : "default";
+      wake();
     };
 
-    // Only hide when the pointer actually leaves the window (no related target).
+    const render = () => {
+      raf = 0;
+      const now = performance.now();
+      const k = reduced ? 1 : 0.42;
+      tip.x += (pos.x - tip.x) * k;
+      tip.y += (pos.y - tip.y) * k;
+      const vx = pos.x - er.x;
+      const vy = pos.y - er.y;
+      er.x += vx * 0.3;
+      er.y += vy * 0.3;
+      er.a += (Math.max(-28, Math.min(28, vx * 0.9)) - er.a) * 0.2;
+      tg.x += (pos.x - tg.x) * 0.25;
+      tg.y += (pos.y - tg.y) * 0.25;
+      tipEl.style.transform = `translate3d(${tip.x}px, ${tip.y}px, 0)`;
+      eraser.style.transform = `translate3d(${er.x}px, ${er.y}px, 0) rotate(${(-18 + er.a).toFixed(1)}deg)`;
+      tag.style.transform = `translate3d(${tg.x}px, ${tg.y}px, 0)`;
+
+      // The graphite trail, fading as the rubber catches up with it.
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const life = state === "default" ? TRAIL_LIFE : 140;
+      while (trail.length && now - trail[0].t > life) trail.shift();
+      ctx.lineCap = "round";
+      ctx.strokeStyle = "#fff";
+      for (let i = 1; i < trail.length; i++) {
+        const a = trail[i - 1];
+        const b = trail[i];
+        const age = (now - b.t) / life;
+        if (age >= 1) continue;
+        ctx.globalAlpha = (1 - age) ** 1.6 * 0.8;
+        ctx.lineWidth = 0.4 + (1 - age) * 2.1;
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+
+      const warping = stepWarp();
+      const settling = Math.abs(pos.x - tip.x) + Math.abs(pos.y - tip.y) > 0.3 || Math.abs(pos.x - er.x) > 0.3;
+      if (trail.length || warping || settling || now - lastMove < 300) wake();
+    };
+    const wake = () => {
+      if (!raf) raf = requestAnimationFrame(render);
+    };
+
     const onLeave = (e: MouseEvent) => {
       if (e.relatedTarget) return;
       visible = false;
       html.dataset.cursorVisible = "false";
+      pos.x = pos.y = -500;
+      wake();
     };
     const onDown = () => (html.dataset.cursorDown = "true");
     const onUp = () => (html.dataset.cursorDown = "false");
+    // The page moved under a still pointer: look again at what it's over.
     const onScroll = () => {
-      // The page moved under a still pointer: look again at what it's over.
-      if (visible) onMove({ pointerType: "mouse", clientX: pos.x, clientY: pos.y, target: document.elementFromPoint(pos.x, pos.y) });
-      if (stuck) {
-        const r = stuck.getBoundingClientRect();
-        if (pos.x < r.left || pos.x > r.right || pos.y < r.top || pos.y > r.bottom) {
-          stuck = null;
-          setSize(null);
-          html.dataset.cursor = "default";
-        }
-      }
+      if (!visible) return;
+      setState(classify(document.elementFromPoint(pos.x, pos.y)));
+      wake();
     };
 
     window.addEventListener("pointermove", onMove, { passive: true });
@@ -142,26 +243,39 @@ export function Cursor() {
     window.addEventListener("pointerdown", onDown);
     window.addEventListener("pointerup", onUp);
     window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", size);
     return () => {
       html.classList.remove("has-cursor");
+      window.clearInterval(refresh);
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("mouseout", onLeave);
       window.removeEventListener("pointerdown", onDown);
       window.removeEventListener("pointerup", onUp);
       window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", size);
       cancelAnimationFrame(raf);
     };
   }, []);
 
+  // Two layers: the ink blends (difference) with the page itself, so it has to
+  // sit on its own at the top level; the eraser and tag are drawn normally.
   return (
-    <div className="cursor" aria-hidden="true">
-      <div ref={ringRef} className="cursor__ring">
-        <div ref={stretchRef} className="cursor__stretch">
-          <div ref={shapeRef} className="cursor__shape" />
+    <>
+      <div ref={inkRef} className="cur-ink" aria-hidden="true">
+        <canvas className="cur__trail" />
+        <div className="cur__tip">
+          <i />
         </div>
-        <span ref={labelRef} className="cursor__label t-label" />
       </div>
-      <div ref={dotRef} className="cursor__dot" />
-    </div>
+      <div ref={rootRef} className="cur" aria-hidden="true">
+        <div className="cur__eraser">
+          <i />
+          <b />
+        </div>
+        <div className="cur__tag">
+          <span />
+        </div>
+      </div>
+    </>
   );
 }

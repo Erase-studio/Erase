@@ -38,7 +38,7 @@ export function Crumple() {
         <p className="cr__kicker mono muted">(01) The template</p>
         <div className="cr__slot" data-slot aria-hidden="true" />
         <p className="cr__cap mono muted">The homepage every agency ships. Printed. Keep scrolling.</p>
-        <h2 id="cr-title" className="cr__title">
+        <h2 id="cr-title" className="cr__title" data-warp>
           Every template
           <br />
           ends up like this.

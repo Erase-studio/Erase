@@ -5,7 +5,6 @@ import { site } from "@/content/site";
 import { SmoothScroll } from "@/components/system/SmoothScroll";
 import { Cursor } from "@/components/system/Cursor";
 import { SoundDirector } from "@/components/system/SoundDirector";
-import { PillFx } from "@/components/system/PillFx";
 import { Loader } from "@/components/system/Loader";
 import { PageTransition } from "@/components/system/PageTransition";
 import { Nav } from "@/components/system/Nav";
@@ -91,7 +90,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <Details />
         <Loader />
         <SoundDirector />
-        <PillFx />
         <div className="grain" aria-hidden="true" />
         <script
           type="application/ld+json"
