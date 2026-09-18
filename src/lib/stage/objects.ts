@@ -21,10 +21,20 @@ export function eraserGeometry() {
   return new RoundedBoxGeometry(ERASER.x, ERASER.y, ERASER.z, 4, 0.08);
 }
 
-/** The cardboard sleeve, covering the back 58% of a sleeved eraser. */
+/**
+ * The cardboard sleeve over the back of a sleeved eraser. It runs a hair past
+ * the rubber's back end so the two end faces never share a plane (that shared
+ * plane is what flickered), and the label is only printed on the two broad
+ * sides: the ends and edges sample a plain black corner of the texture.
+ */
 export function sleeveGeometry() {
-  const g = new RoundedBoxGeometry(ERASER.x * 0.58, ERASER.y * 1.06, ERASER.z * 1.1, 2, 0.02);
+  const g = new RoundedBoxGeometry(ERASER.x * 0.6, ERASER.y * 1.06, ERASER.z * 1.1, 2, 0.02);
   g.translate(ERASER.x * 0.21, 0, 0);
+  const uv = g.attributes.uv as THREE.BufferAttribute;
+  for (const grp of g.groups) {
+    if (grp.materialIndex === 4 || grp.materialIndex === 5) continue;
+    for (let i = grp.start; i < grp.start + grp.count; i++) uv.setXY(i, 0.02, 0.97);
+  }
   return g;
 }
 

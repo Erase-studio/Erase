@@ -163,23 +163,15 @@ export class StackView implements View {
 
     const sec = this.el.parentElement!.getBoundingClientRect();
     const raw = Math.min(1, Math.max(0, -sec.top / Math.max(1, sec.height - f.vh)));
-    const was = this.progress;
     this.progress += (raw - this.progress) * (f.reduced ? 1 : 1 - Math.exp(-f.dt * 6));
     const n = this.sheets.length;
-    const moved = (Math.abs(this.progress - was) * (n - 1)) / Math.max(f.dt, 1e-3);
     const t = this.progress * (n - 1) * 1.02;
 
     // The whole stack leans back a touch and turns toward the pointer.
     const px = f.pointer.x;
     const py = f.pointer.y;
     const over = px >= s.left && px <= s.right && py >= s.top && py <= s.bottom;
-    const hoverWas = this.hover;
     this.hover += ((over ? 1 : 0) - this.hover) * (1 - Math.exp(-f.dt * 6));
-    if (!f.reduced) {
-      const lift = Math.abs(this.hover - hoverWas) / Math.max(f.dt, 1e-3);
-      const rate = moved * 0.9 + lift * 0.12;
-      if (rate > 0.02) sound.peel(rate);
-    }
     const lookX = over ? ((px - s.left) / w - 0.5) : 0;
     const lookY = over ? ((py - s.top) / h - 0.5) : 0;
     this.group.position.set(cx, cy, 0);
@@ -228,6 +220,8 @@ export class StackView implements View {
     this.shadow.position.set(16, -22, -6);
 
     if (active !== this.active) {
+      // One soft page-turn per poster (not on the first bind).
+      if (this.active >= 0 && !f.reduced) sound.pageTurn(active > this.active ? 1 : -1);
       this.active = active;
       this.onActive?.(active);
     }

@@ -28,10 +28,9 @@ export function WorkStack() {
     <section
       ref={rootRef}
       className="ws"
+      data-sound="work"
       style={{ "--n": work.length } as React.CSSProperties}
       aria-labelledby="ws-title"
-      data-line="-0.04,0.06,0;0.03,0.5,80;-0.04,0.96,0"
-      data-line-m="-0.08,0.06,0;-0.06,0.5,0;-0.08,0.96,0"
     >
       <div className="ws__sticky frame" data-view="stack" data-slugs={work.map((w) => w.slug).join(",")}>
         <header className="ws__head">

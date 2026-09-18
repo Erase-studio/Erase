@@ -33,7 +33,7 @@ export function Crumple() {
   }, []);
 
   return (
-    <section ref={rootRef} className="cr" aria-labelledby="cr-title" data-line="1.04,0.04,0;0.95,0.5,60;1.05,0.97,0" data-line-m="1.08,0.04,0;1.06,0.5,0;1.08,0.97,0">
+    <section ref={rootRef} className="cr" data-sound="crumple" aria-labelledby="cr-title">
       <div className="cr__sticky" data-view="crumple">
         <p className="cr__kicker mono muted">(01) The template</p>
         <div className="cr__slot" data-slot aria-hidden="true" />

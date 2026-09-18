@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { whenStageReady } from "@/lib/stage/store";
 import { RubHand, RubSurface, mulberry32 } from "@/lib/rub";
 import { sound } from "@/lib/sound";
+import { Mark } from "@/components/ui/Mark";
 
 declare global {
   interface Window {
@@ -64,8 +65,9 @@ export function Loader() {
     let cancelled = false;
     const rafs = new Set<number>();
 
-    // ─── Canvases: paper (with the grey ghosts), ink (the pencil), crumbs ───
+    // ─── Canvases: paper, ghost (grey smudges left by rubbing), ink (the pencil), crumbs ───
     const paper = root.querySelector<HTMLCanvasElement>(".loader__paper")!;
+    const ghost = root.querySelector<HTMLCanvasElement>(".loader__ghost")!;
     const ink = root.querySelector<HTMLCanvasElement>(".loader__ink")!;
     const crumbsC = root.querySelector<HTMLCanvasElement>(".loader__crumbs")!;
     const pencil = root.querySelector<HTMLElement>(".loader__pencil")!;
@@ -73,14 +75,15 @@ export function Loader() {
     const W = window.innerWidth;
     const H = window.innerHeight;
     const dpr = Math.min(2, window.devicePixelRatio || 1);
-    for (const c of [paper, ink, crumbsC]) {
+    for (const c of [paper, ghost, ink, crumbsC]) {
       c.width = Math.round(W * dpr);
       c.height = Math.round(H * dpr);
     }
     const pctx = paper.getContext("2d")!;
+    const gctx = ghost.getContext("2d")!;
     const ictx = ink.getContext("2d")!;
     const cctx = crumbsC.getContext("2d")!;
-    for (const x of [pctx, ictx, cctx]) x.setTransform(dpr, 0, 0, dpr, 0, 0);
+    for (const x of [pctx, gctx, ictx, cctx]) x.setTransform(dpr, 0, 0, dpr, 0, 0);
     const rnd = mulberry32(19);
 
     // Paper with a little tooth.
@@ -282,7 +285,7 @@ export function Loader() {
 
     // ─── Rubbing out ───
     const hand = new RubHand(120);
-    const inkRub = new RubSurface({ canvas: ink, marks: paper, residue: "150,152,158", specks: ["#8b8e94", "#b9bcc4"], strength: 0.55, cols: 30, rows: 18 });
+    const inkRub = new RubSurface({ canvas: ink, marks: ghost, residue: "150,152,158", specks: ["#8b8e94", "#b9bcc4"], strength: 0.55, cols: 30, rows: 18 });
     Object.assign(inkRub, { w: W, h: H, dpr });
 
     /** Scrub a box with the eraser, row by row. Returns when it's done. */
@@ -367,14 +370,17 @@ export function Loader() {
         const withSound = await new Promise<boolean>((resolve) => (gate.current = resolve));
         if (cancelled) return;
         sound.set(withSound);
+        if (withSound) sound.welcome();
       }
       setPhase("exit");
 
       // Put the drawing onto the paper, then rub the paper itself away.
       pctx.setTransform(1, 0, 0, 1, 0, 0);
+      pctx.drawImage(ghost, 0, 0);
       pctx.drawImage(ink, 0, 0);
       pctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ictx.clearRect(0, 0, W, H);
+      gctx.clearRect(0, 0, W, H);
       root.dataset.clear = "true";
       const out = new RubSurface({ canvas: paper, strength: 0.95, cols: 32, rows: 20 });
       Object.assign(out, { w: W, h: H, dpr });
@@ -408,6 +414,7 @@ export function Loader() {
       aria-hidden={phase === "gate" ? undefined : true}
     >
       <canvas className="loader__paper" />
+      <canvas className="loader__ghost" />
       <canvas className="loader__ink" />
       <canvas className="loader__crumbs" />
       <div className="loader__pencil" aria-hidden="true">
@@ -419,7 +426,9 @@ export function Loader() {
       </div>
 
       <div className="loader__ui">
-        <p className="loader__brand">Erase</p>
+        <p className="loader__brand">
+          <Mark size={76} alive />
+        </p>
         <p className="loader__tag mono">Independent design &amp; development studio</p>
         <ul className="loader__steps mono">
           <li data-done={steps.fonts}>Sharpening the pencil</li>

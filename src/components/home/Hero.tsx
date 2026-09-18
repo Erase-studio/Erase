@@ -7,7 +7,7 @@ import { Roll } from "@/components/ui/Roll";
  */
 export function Hero() {
   return (
-    <section className="hero frame" aria-labelledby="hero-title">
+    <section className="hero frame" data-sound="hero" aria-labelledby="hero-title">
       <div className="hero__head">
         <h1 id="hero-title" className="hero__title" data-reveal="lines" data-delay="0.6">
           We design and build websites that couldn’t belong to anyone else.

@@ -7,6 +7,7 @@ import { TransitionLink } from "./TransitionLink";
 import { Roll } from "@/components/ui/Roll";
 import { SoundToggle, ThemeToggle } from "./Toggles";
 import { sound } from "@/lib/sound";
+import { Mark } from "@/components/ui/Mark";
 
 const links = [
   { href: "/", label: "Home" },
@@ -78,7 +79,7 @@ export function Nav() {
     <>
       <header ref={navRef} className="nav" data-hidden="false">
         <TransitionLink href="/" className="nav__logo" aria-label="Erase, home" title="Home">
-          Erase
+          <Mark alive size={76} />
         </TransitionLink>
         <p className="nav__mid mono">Independent design &amp; development studio</p>
         <div className="nav__right">
@@ -100,7 +101,9 @@ export function Nav() {
 
       <div ref={menuRef} id="site-menu" className="menu" data-open={open} inert={!open} aria-label="Site menu">
         <div className="menu__top">
-          <span className="nav__logo">Erase</span>
+          <span className="nav__logo">
+            <Mark size={76} />
+          </span>
           <button type="button" className="pill" onClick={toggle}>
             <Roll>Close</Roll>
             <span className="pill__dots" aria-hidden="true">

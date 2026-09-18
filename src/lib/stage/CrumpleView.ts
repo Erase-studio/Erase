@@ -136,7 +136,7 @@ export class CrumpleView implements View {
       // Crushing (either way) creases the paper; the throw goes whoosh once.
       const crush = Math.abs(Math.min(0.56, Math.max(0.1, p)) - Math.min(0.56, Math.max(0.1, was)));
       if (crush > 0) sound.crinkle(crush * 260);
-      if (was < 0.6 && p >= 0.6) sound.whoosh(0.9, 0.8, 0.6);
+      if (was < 0.6 && p >= 0.6) sound.whoosh(0.6, 0.8, 0.6);
     }
 
     const s = this.slot.getBoundingClientRect();

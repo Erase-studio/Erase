@@ -33,7 +33,7 @@ export function Desk() {
   const awake = hour >= 8 && hour < 23;
 
   return (
-    <dl className="ct-desk" data-line="-0.07,0.1,0;-0.07,1.25,0" data-line-m="-0.04,0.1,0;-0.04,1.2,0">
+    <dl className="ct-desk">
       <div>
         <dt className="mono muted">Or just email</dt>
         <dd>

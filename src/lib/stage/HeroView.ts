@@ -99,6 +99,16 @@ export class HeroView implements View {
     this.started = true;
     this.startT = performance.now();
     sound.whoosh(1.1, 1.3);
+    // Throw everything inward so the heap lands in about a second, each piece
+    // with its own speed and spin so it arrives as a tumble, not a formation.
+    const aim = new THREE.Vector3();
+    for (const b of this.clump.bodies) {
+      const d = b.p.length();
+      // Each piece heads for its own spot across the width, not the middle.
+      aim.set((Math.random() - 0.5) * 16, (Math.random() - 0.5) * 4, (Math.random() - 0.5) * 3);
+      b.v.subVectors(aim, b.p).multiplyScalar(1.4 + Math.random() * 0.4);
+      b.w.set(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).multiplyScalar(6 + d * 0.2);
+    }
   }
 
   update(f: Frame) {
@@ -110,7 +120,7 @@ export class HeroView implements View {
 
     const c = this.clump;
     if (this.started) {
-      const t = Math.min(1, (performance.now() - this.startT) / 1400);
+      const t = Math.min(1, (performance.now() - this.startT) / 900);
       c.strength = 0.35 + t * 0.75;
     }
 

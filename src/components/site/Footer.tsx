@@ -1,7 +1,8 @@
 import { site } from "@/content/site";
 import { TransitionLink } from "@/components/system/TransitionLink";
 import { Roll } from "@/components/ui/Roll";
-import { LastTemplate } from "./LastTemplate";
+import { FooterCta } from "./FooterCta";
+import { BackToTop, FooterWord, StudioClock } from "./FooterBits";
 
 const pages = [
   { href: "/work", label: "Work" },
@@ -10,50 +11,29 @@ const pages = [
   { href: "/contact", label: "Contact" },
 ];
 
-/** Every page ends the same way: one last template to rub out, the call to action under it, then the facts. */
+/**
+ * The end of every page: the facts, the studio's clock, and a giant wordmark the
+ * eraser leans on. The home page also gets the big call to action above them.
+ */
 export function Footer() {
   const social = site.social.filter((s) => s.href);
   return (
-    <footer className="foot" data-line="1.05,0.02,0">
-      <div className="foot__cta frame">
-        <LastTemplate>
-          <p className="mono muted">Start a project</p>
-          <TransitionLink
-            href="/contact"
-            title="Contact"
-            className="foot__big"
-            data-line="0.5,-0.2,0;0.97,-0.08,50;1.07,0.46,0;0.9,1.08,-40;0.5,1.2,0;0.1,1.06,40;-0.07,0.5,0;0.08,-0.06,-30;0.52,-0.24,0;0.83,-0.14,20"
-          >
-            Let’s erase your template.
-          </TransitionLink>
-          <div className="foot__actions">
-            <TransitionLink href="/contact" title="Contact" className="pill pill--solid">
-              <Roll>Plan a project</Roll>
-              <i className="pill__dot" aria-hidden="true" />
-            </TransitionLink>
-            <a href={`mailto:${site.email}`} className="pill">
-              <Roll>{site.email}</Roll>
-            </a>
-          </div>
-        </LastTemplate>
-      </div>
+    <footer className="foot" data-sound="end">
+      <FooterCta />
 
       <div className="foot__base frame">
-        <div className="marks muted" aria-hidden="true">
-          <i />
-          <i />
-          <i />
-          <i />
-        </div>
-        <div className="foot__grid">
-          <p className="foot__word">Erase</p>
-          <div>
+        <div className="fb__grid">
+          <div className="fb__about">
             <p className="mono muted">Studio</p>
-            <p>Independent design &amp; development studio. Based in {site.based}, working worldwide.</p>
+            <p className="fb__lead">An independent design &amp; development studio. We draw every site for one brand and build it by hand.</p>
+            <p className="avail mono">
+              <i aria-hidden="true" />
+              {site.availability}
+            </p>
           </div>
-          <div>
+          <nav aria-label="Footer">
             <p className="mono muted">Pages</p>
-            <ul>
+            <ul className="fb__links">
               {pages.map((p) => (
                 <li key={p.href}>
                   <TransitionLink href={p.href} title={p.label}>
@@ -62,10 +42,10 @@ export function Footer() {
                 </li>
               ))}
             </ul>
-          </div>
+          </nav>
           <div>
             <p className="mono muted">Say hello</p>
-            <ul>
+            <ul className="fb__links">
               <li>
                 <a href={`mailto:${site.email}`}>
                   <Roll>{site.email}</Roll>
@@ -80,10 +60,18 @@ export function Footer() {
               ))}
             </ul>
           </div>
+          <div>
+            <p className="mono muted">Studio time</p>
+            <StudioClock />
+          </div>
         </div>
+
+        <FooterWord />
+
         <div className="foot__legal mono muted">
           <span>© {new Date().getFullYear()} Erase</span>
           <span>Designed and built from scratch</span>
+          <BackToTop />
         </div>
       </div>
     </footer>

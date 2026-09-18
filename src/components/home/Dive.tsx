@@ -45,9 +45,8 @@ export function Dive() {
     <section
       ref={rootRef}
       className="dv"
+      data-sound="dive"
       aria-labelledby="dv-title"
-      data-line="0.022,0,0;0.022,1,0"
-      data-line-m="0.02,0,0;0.02,1,0"
     >
       <div className="dv__sticky">
         <p className="dv__kicker mono muted">(05) Inside the page</p>

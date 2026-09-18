@@ -12,8 +12,9 @@ const TransitionContext = createContext<Ctx>({ navigate: () => {} });
 export const usePageTransition = () => useContext(TransitionContext);
 
 /**
- * Route changes: a graphite sheet rises with the destination's name, the route
- * swaps underneath, and the sheet carries on up and out.
+ * Route changes: the eraser sweeps across and rubs the page away (the sheet
+ * behind it is the page's own paper), the destination's name shows for a beat
+ * while the route swaps, then a second sweep rubs that away to the new page.
  */
 export function PageTransition({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -40,51 +41,73 @@ export function PageTransition({ children }: { children: ReactNode }) {
       }
       busy.current = true;
       window.__erasePT = true;
-      sound.whoosh(1, 0.9);
       setOpts(o);
       const root = rootRef.current!;
       const panel = root.querySelector<HTMLElement>(".pt__panel")!;
+      const tool = root.querySelector<HTMLElement>(".pt__tool")!;
+      const label = root.querySelector<HTMLElement>(".pt__label")!;
       root.dataset.active = "true";
       window.__lenis?.stop();
 
-      requestAnimationFrame(() => {
-        const chars = root.querySelectorAll(".pt__label span");
-        gsap
-          .timeline()
-          .fromTo(panel, { yPercent: 101, borderRadius: "var(--radius) var(--radius) 0 0" }, { yPercent: 0, borderRadius: 0, duration: 0.9, ease: "expo.inOut" }, 0)
-          .fromTo(chars, { yPercent: 105 }, { yPercent: 0, duration: 0.8, stagger: 0.02, ease: "expo.out" }, 0.45)
-          .add(() => {
-            new Promise<void>((resolve) => {
-              pending.current = { href: url.pathname, resolve };
-              router.push(href, { scroll: false });
-            }).then(() => {
-              window.__lenis?.scrollTo(0, { immediate: true, force: true });
-              window.scrollTo(0, 0);
-              window.setTimeout(() => {
-                ScrollTrigger.refresh();
-                if (url.hash) {
-                  const el = document.querySelector<HTMLElement>(url.hash);
-                  if (el) {
-                    const y = el.getBoundingClientRect().top + window.scrollY;
-                    window.__lenis?.scrollTo(y, { immediate: true, force: true });
-                    window.scrollTo(0, y);
-                  }
-                }
-                window.__erasePT = false;
-                window.dispatchEvent(new Event("erase:reveal"));
-                gsap
-                  .timeline({
-                    onComplete: () => {
-                      root.dataset.active = "false";
-                      busy.current = false;
-                      window.__lenis?.start();
-                    },
-                  })
-                  .to(chars, { yPercent: -105, duration: 0.5, stagger: 0.012, ease: "power3.in" }, 0)
-                  .to(panel, { yPercent: -101, borderRadius: "0 0 var(--radius) var(--radius)", duration: 1, ease: "expo.inOut" }, 0.15);
-              }, 80);
-            });
-          }, "+=0.1");
+      // One sweep of the eraser across the screen. "in" wipes the page away
+      // behind it (the panel is the page's own paper); "out" wipes the panel off.
+      const sweep = (dir: "in" | "out", duration: number) =>
+        new Promise<void>((resolve) => {
+          const W = window.innerWidth;
+          const H = window.innerHeight;
+          const s = { p: 0 };
+          let lastX = -1;
+          let lastT = performance.now();
+          gsap.to(s, {
+            p: 1,
+            duration,
+            ease: "power2.inOut",
+            onUpdate: () => {
+              const x = s.p * (W + 360) - 180;
+              panel.style.clipPath = dir === "in" ? `inset(0 ${Math.max(0, W - x)}px 0 0)` : `inset(0 0 0 ${Math.max(0, x)}px)`;
+              const y = H * (0.5 + Math.sin(s.p * Math.PI * 2.5) * 0.27);
+              tool.style.transform = `translate3d(${x}px, ${y}px, 0) rotate(${-1.1 + Math.cos(s.p * Math.PI * 2.5) * 0.3}rad)`;
+              const now = performance.now();
+              if (lastX >= 0) sound.rub(Math.abs(x - lastX) / Math.max(1, now - lastT) * 700, 1);
+              lastX = x;
+              lastT = now;
+            },
+            onComplete: () => resolve(),
+          });
+        });
+
+      requestAnimationFrame(async () => {
+        tool.style.opacity = "1";
+        label.style.opacity = "0";
+        await sweep("in", 0.62);
+        tool.style.opacity = "0";
+        gsap.fromTo(label, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.35, ease: "power2.out" });
+        await new Promise<void>((resolve) => {
+          pending.current = { href: url.pathname, resolve };
+          router.push(href, { scroll: false });
+        });
+        window.__lenis?.scrollTo(0, { immediate: true, force: true });
+        window.scrollTo(0, 0);
+        await new Promise((r) => window.setTimeout(r, 120));
+        ScrollTrigger.refresh();
+        if (url.hash) {
+          const el = document.querySelector<HTMLElement>(url.hash);
+          if (el) {
+            const y = el.getBoundingClientRect().top + window.scrollY;
+            window.__lenis?.scrollTo(y, { immediate: true, force: true });
+            window.scrollTo(0, y);
+          }
+        }
+        window.__erasePT = false;
+        window.dispatchEvent(new Event("erase:reveal"));
+        gsap.to(label, { opacity: 0, duration: 0.2 });
+        tool.style.opacity = "1";
+        await sweep("out", 0.66);
+        tool.style.opacity = "0";
+        panel.style.clipPath = "";
+        root.dataset.active = "false";
+        busy.current = false;
+        window.__lenis?.start();
       });
     },
     [router],
@@ -105,16 +128,14 @@ export function PageTransition({ children }: { children: ReactNode }) {
       {children}
       <div ref={rootRef} className="pt" data-active="false" aria-hidden="true">
         <div className="pt__panel">
-          <p className="pt__label">
-            {title.split("").map((c, i) => (
-              <span key={i}>{c}</span>
-            ))}
-          </p>
-          <div className="pt__meta marks mono">
-            <i />
-            <span>{opts.label ?? "Erase"}</span>
-            <i />
+          <div className="pt__label">
+            <p className="mono muted">{opts.label ?? "Erase"}</p>
+            <p className="pt__title">{title}</p>
           </div>
+        </div>
+        <div className="pt__tool">
+          <i />
+          <b>Erase</b>
         </div>
       </div>
     </TransitionContext.Provider>

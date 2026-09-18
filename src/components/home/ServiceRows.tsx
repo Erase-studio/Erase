@@ -3,7 +3,7 @@ import { services } from "@/content/agency";
 /** Six services as big rows. The pencil line switches back across the list as you read. */
 export function ServiceRows({ kicker = "(03) What we do" }: { kicker?: string }) {
   return (
-    <section className="svc frame" aria-labelledby="svc-title">
+    <section className="svc frame" data-sound="services" aria-labelledby="svc-title">
       <header className="svc__head">
         <p className="mono muted" data-reveal="fade">
           {kicker}
@@ -20,7 +20,6 @@ export function ServiceRows({ kicker = "(03) What we do" }: { kicker?: string })
             className="svc__row"
             data-reveal="fade"
             // The pencil rules the list: along each separator, turning in the margins.
-            data-line={i % 2 === 0 ? "-0.02,0,0;1.02,0,0" : "1.02,0,0;-0.02,0,0"}
           >
             <span className="mono svc__num">{String(i + 1).padStart(2, "0")}</span>
             <h3 className="svc__name">{s.name}</h3>
