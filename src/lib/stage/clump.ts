@@ -73,7 +73,7 @@ export class Clump {
   mouseV = new THREE.Vector3();
   mouseR = 1.3;
   /** Impacts from the last step, loudest first is up to the listener. */
-  hits: { v: number; x: number; kind: Body["kind"] }[] = [];
+  hits: { v: number; x: number; a: Body["kind"]; b: Body["kind"] }[] = [];
   private world: THREE.Vector3[][];
 
   constructor(bodies: Body[]) {
@@ -172,7 +172,8 @@ export class Clump {
     tmp.subVectors(va, vb);
     const vn = tmp.dot(n);
     if (vn >= 0) return;
-    if (-vn > (b ? 2.2 : 3) && this.hits.length < 24) this.hits.push({ v: -vn, x: ca.x, kind: b && b.kind === "pencil" ? "pencil" : a.kind });
+    // Body-on-body impacts are heard; the cursor pushing things is not.
+    if (b && -vn > 1.4 && this.hits.length < 32) this.hits.push({ v: -vn, x: ca.x, a: a.kind, b: b.kind });
     const e = b ? 0.25 : 0.55;
     const jn = (-(1 + e) * vn) / (a.invM + invB + a.invI * 0.15 + (b ? b.invI * 0.15 : 0));
     // Friction along the sliding direction, capped by Coulomb.

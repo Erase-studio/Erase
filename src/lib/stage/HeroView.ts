@@ -149,10 +149,10 @@ export class HeroView implements View {
 
     if (!f.reduced) {
       c.step(f.dt, f.time);
-      // The three hardest knocks of the frame, panned to where they happened.
+      // The hardest impacts of the frame, as hard as they were and where they were.
       if (c.hits.length) {
         c.hits.sort((a, b) => b.v - a.v);
-        for (const h of c.hits.slice(0, 3)) sound.knock(h.v / 12, h.x / 8, h.kind === "pencil" ? "wood" : "rubber");
+        for (const h of c.hits.slice(0, 5)) sound.impact((h.v - 1.4) / 10, h.x / 8, h.a, h.b);
       }
     }
     else if (!this.settled) {

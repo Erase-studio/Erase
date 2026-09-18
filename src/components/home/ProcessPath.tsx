@@ -39,6 +39,7 @@ export function ProcessPath() {
     let drawnAt = -1;
     let lastEx = 0;
     let lastI = -1;
+    let lastTip: [number, number] | null = null;
 
     const clamp = (v: number) => Math.min(1, Math.max(0, v));
     const smooth = (v: number) => {
@@ -66,7 +67,16 @@ export function ProcessPath() {
       if (tip && wipe >= 1 && !reduced) {
         pencil.style.opacity = "1";
         pencil.style.transform = `translate3d(${tip[0] * k}px, ${tip[1] * k}px, 0)`;
-      } else pencil.style.opacity = "0";
+        // The pencil is heard only while it's actually moving across the paper.
+        if (lastTip) {
+          const speed = (Math.hypot(tip[0] - lastTip[0], tip[1] - lastTip[1]) * k) / Math.max(dt, 1e-3);
+          if (speed > 8 && speed < 4000) sound.write(speed);
+        }
+        lastTip = tip;
+      } else {
+        pencil.style.opacity = "0";
+        lastTip = null;
+      }
       // The rubber rides the edge of the wipe, scrubbing up and down.
       if (wipe > 0 && wipe < 1 && !reduced) {
         const ex = (wipe * (SHEET.w + 120) - 60) * k;
@@ -74,7 +84,7 @@ export function ProcessPath() {
         rubber.style.opacity = "1";
         rubber.style.transform = `translate3d(${ex}px, ${ey}px, 0) rotate(${Math.cos(wipe * Math.PI * 7) * 0.3 - 1.2}rad)`;
         const speed = Math.abs(ex - lastEx) / Math.max(dt, 1e-3);
-        if (speed > 20) sound.rub(speed * 2.5, 0.9);
+        if (speed > 20) sound.rub(speed * 0.9, 0.6);
         lastEx = ex;
       } else rubber.style.opacity = "0";
     };

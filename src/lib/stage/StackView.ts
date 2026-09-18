@@ -163,8 +163,11 @@ export class StackView implements View {
 
     const sec = this.el.parentElement!.getBoundingClientRect();
     const raw = Math.min(1, Math.max(0, -sec.top / Math.max(1, sec.height - f.vh)));
+    const was = this.progress;
     this.progress += (raw - this.progress) * (f.reduced ? 1 : 1 - Math.exp(-f.dt * 6));
     const n = this.sheets.length;
+    // A light paper rustle while a sheet is peeling.
+    if (!f.reduced) sound.paperFlip((Math.abs(this.progress - was) * (n - 1)) / Math.max(f.dt, 1e-3));
     const t = this.progress * (n - 1) * 1.02;
 
     // The whole stack leans back a touch and turns toward the pointer.

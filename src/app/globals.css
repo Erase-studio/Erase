@@ -29,6 +29,8 @@
   --nav-h: 76px;
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-io: cubic-bezier(0.76, 0, 0.24, 1);
+  /* A spring: overshoots a little and settles, like something soft popping into place. */
+  --spring: linear(0, 0.009, 0.035 2.1%, 0.141, 0.281 6.7%, 0.723 12.9%, 0.938 16.7%, 1.017, 1.077, 1.121, 1.149 24.3%, 1.159, 1.163, 1.161, 1.154 29.9%, 1.129 32.8%, 1.051 39.6%, 1.017 43.1%, 0.991, 0.977 51%, 0.974 53.8%, 0.975 57.1%, 0.997 69.8%, 1.003 76.9%, 1.004 83.8%, 1);
 
   /* Day: charcoal on paper. */
   --bg: #ecebe6;
@@ -276,22 +278,108 @@ html[data-theme="dark"] {
     white-space: nowrap;
     background: var(--ghost-bg);
     color: var(--fg);
+    isolation: isolate;
+    overflow: hidden;
+    /* Liquid glass: a frosted body with a lit top edge. */
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.3),
+      inset 0 0 0 1px rgb(255 255 255 / 0.05);
+    --blob: var(--fg);
+    --blob-ink: var(--bg);
     transition:
       background-color 0.5s var(--ease),
-      color 0.5s var(--ease),
-      transform 0.5s var(--ease);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+      color 0.35s var(--ease) 0.05s,
+      transform 0.5s var(--ease),
+      scale 0.9s var(--spring);
+    backdrop-filter: blur(16px) saturate(170%);
+    -webkit-backdrop-filter: blur(16px) saturate(170%);
+  }
+
+  /* The fill: a drop that grows from where the pointer came in and takes the
+     pill's shape, then drains back toward where it left. */
+  .pill::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    left: var(--bx, 50%);
+    top: var(--by, 50%);
+    width: calc(max(100%, 64px) * 2.4);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--blob);
+    translate: -50% -50%;
+    scale: 0;
+    pointer-events: none;
+    transition: scale 0.5s cubic-bezier(0.45, 0, 0.2, 1);
+  }
+
+  /* A sheen across the top, like light on glass. */
+  .pill::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(180deg, rgb(255 255 255 / 0.26), rgb(255 255 255 / 0) 55%);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s var(--ease);
+  }
+
+  @media (hover: hover) {
+    .pill:hover {
+      color: var(--blob-ink);
+      scale: 1.045;
+      animation: pill-pop 0.75s cubic-bezier(0.3, 0.7, 0.2, 1);
+    }
+
+    .pill:hover::before {
+      scale: 1;
+      transition: scale 0.75s cubic-bezier(0.3, 1.25, 0.5, 1);
+    }
+
+    .pill:hover::after {
+      opacity: 1;
+    }
+  }
+
+  /* Squish in, bulge, settle. */
+  @keyframes pill-pop {
+    0% {
+      scale: 1 1;
+    }
+    22% {
+      scale: 1.09 0.9;
+    }
+    46% {
+      scale: 0.99 1.07;
+    }
+    68% {
+      scale: 1.055 0.985;
+    }
+    100% {
+      scale: 1.045 1.045;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pill:hover {
+      animation: none;
+      scale: 1;
+    }
   }
 
   .pill--solid {
     background: var(--solid-bg);
     color: var(--solid-fg);
+    --blob: var(--color-blue);
+    --blob-ink: #fff;
   }
 
   .pill--blue {
     background: var(--color-blue);
     color: #fff;
+    --blob: var(--solid-bg);
+    --blob-ink: var(--solid-fg);
   }
 
   .pill__dot {

@@ -51,6 +51,8 @@ export class DiveView implements View {
   private stickers: { mesh: THREE.Mesh; home: THREE.Vector3; off: THREE.Vector3; vel: THREE.Vector3; spin: number; delay: number; s: number; shown: boolean }[] = [];
   private stickerGroup = new THREE.Group();
   private panelZ: Float32Array;
+  private rowStep = 3.2;
+  private builtRows = 0;
   private lastCount = -1;
   private arrived = false;
   private look = new THREE.Vector2();
@@ -159,6 +161,7 @@ export class DiveView implements View {
   private buildTunnel(coarse: boolean): Float32Array {
     const layout = DiveView.page();
     const step = coarse ? 4.6 : 3.2;
+    this.rowStep = step;
     const rows = Math.floor((L + 14) / step);
     // Panel frames: origin, width axis, height axis, normal, size.
     type P = { o: THREE.Vector3; u: THREE.Vector3; v: THREE.Vector3; n: THREE.Vector3; w: number; h: number };
@@ -463,6 +466,10 @@ export class DiveView implements View {
     // at the end whatever is left goes in one sweep.
     const build = band(p, 0.25, 0.42) * (L + 30);
     this.barUniforms.uBuild.value = build;
+    // Each row of wireframes that draws in rings, climbing as the tunnel builds.
+    const rows = Math.floor(build / this.rowStep);
+    if (rows > this.builtRows && !f.reduced) for (let k = this.builtRows + 1; k <= Math.min(rows, this.builtRows + 2); k++) sound.reveal(k);
+    this.builtRows = rows;
     this.barUniforms.uZ.value = THREE.MathUtils.lerp(flight > 0 ? pos.z : 10, -L - 60, band(p, 0.8, 0.87));
 
     // Clichés: a hole opens where it went through.
@@ -472,7 +479,7 @@ export class DiveView implements View {
       // Only near words are readable; far ones wait in the fog.
       const dist = this.camPos.z - w.z;
       w.mat.uniforms.uOpacity.value = clamp01((build - (4 - w.z)) / 5) * (1 - smooth((dist - 9) / 9));
-      if (e > 0 && !w.hit && !f.reduced) sound.squeak();
+      if (e > 0 && !w.hit && !f.reduced) sound.eraseHit();
       w.hit = e > 0;
       if (e > 0 && e < 0.08) w.mat.uniforms.uHit.value.set(clamp01((pos.x - w.x) / w.w + 0.5), clamp01((pos.y - w.y) / w.h + 0.5));
       w.mesh.visible = e < 1;
