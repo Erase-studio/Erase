@@ -3,7 +3,7 @@
 import { useState, useSyncExternalStore } from "react";
 import { site } from "@/content/site";
 
-/** Things next to the letter: the address (copy it), and what time it is here. */
+/** Next to the letter: the address (copy it) and what time it is here. */
 export function Desk() {
   const [copied, setCopied] = useState(false);
   // The clock ticks every 20 s; the server renders it blank.
@@ -33,29 +33,23 @@ export function Desk() {
   const awake = hour >= 8 && hour < 23;
 
   return (
-    <dl className="ct-desk">
-      <div>
-        <dt className="mono muted">Or just email</dt>
-        <dd>
-          <a href={`mailto:${site.email}`} className="ct-desk__mail">
-            {site.email}
-          </a>
-          <button type="button" className="ct-desk__copy mono" onClick={copy} aria-live="polite">
-            {copied ? "Copied ✓" : "Copy"}
-          </button>
-        </dd>
-      </div>
-      <div>
-        <dt className="mono muted">Time in {site.based}</dt>
-        <dd>
-          <span className="ct-desk__time">{time}</span>
-          <span className="muted">{awake ? "We’re probably at our desks." : "We’re probably asleep. It’ll be the first thing we read."}</span>
-        </dd>
-      </div>
-      <div>
-        <dt className="mono muted">Then</dt>
-        <dd>A short call, a clear proposal, then we start.</dd>
-      </div>
-    </dl>
+    <div className="ct-desk">
+      <p className="ct-desk__row">
+        <span className="mono muted">Or email</span>
+        <a href={`mailto:${site.email}`} className="ct-desk__mail">
+          {site.email}
+        </a>
+        <button type="button" className="ct-desk__copy mono" onClick={copy} aria-live="polite">
+          {copied ? "Copied" : "Copy"}
+        </button>
+      </p>
+      <p className="ct-desk__row">
+        <span className="mono muted">{site.based}</span>
+        <span className="ct-desk__time">{time}</span>
+        <span className="ct-desk__note mono" data-awake={awake}>
+          {awake ? "Probably at our desks" : "Asleep. First thing we read"}
+        </span>
+      </p>
+    </div>
   );
 }

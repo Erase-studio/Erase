@@ -22,10 +22,10 @@ export default function ContactPage() {
             <br />
             Write us a letter.
           </h1>
-          <p className="lede" data-reveal="fade" data-delay="0.3">
-            Fill in the blanks, as much or as little as you like. It comes straight to the two of us, and we answer every one.
+          <p className="lede ct__lede" data-reveal="fade" data-delay="0.3">
+            Fill in the blanks. It comes straight to the two of us, and we answer every one.
           </p>
-          <div data-reveal="fade" data-delay="0.4">
+          <div className="ct__foot" data-reveal="fade" data-delay="0.4">
             <Desk />
           </div>
         </header>

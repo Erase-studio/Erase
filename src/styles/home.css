@@ -619,7 +619,7 @@
     scale: 0.6;
     transition:
       opacity 0.3s var(--ease),
-      scale 0.6s var(--spring);
+      scale 0.5s var(--ease);
   }
 
   .svc__card[data-show="true"] {
@@ -1048,7 +1048,7 @@
     height: clamp(78px, 7.4vw, 104px);
     filter: drop-shadow(0 18px 24px rgb(0 0 0 / 0.2));
     rotate: -3deg;
-    transition: rotate 0.5s var(--ease), scale 0.5s var(--ease), translate 0.9s var(--spring);
+    transition: rotate 0.5s var(--ease), scale 0.5s var(--ease), translate 0.7s var(--ease);
   }
 
   .eb:hover {
