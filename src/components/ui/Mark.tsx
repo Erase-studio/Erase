@@ -63,7 +63,7 @@ export function Mark({ size = 64, alive = false, className = "" }: { size?: numb
         </linearGradient>
       </defs>
       {/* Rubber */}
-      <rect x="3" y="7" width="54" height="43" rx="11" fill={`url(#${id}r)`} stroke="#141517" strokeWidth="2" />
+      <rect className="mark__rubber" x="3" y="7" width="54" height="43" rx="11" fill={`url(#${id}r)`} stroke="#141517" strokeWidth="2" />
       {/* Sleeve, a touch taller than the rubber, with its stripe */}
       <g className="mark__sleeve">
         <rect x="47" y="4.5" width="50" height="48" rx="5" fill={`url(#${id}s)`} />

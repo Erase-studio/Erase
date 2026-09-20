@@ -4,6 +4,7 @@ import Script from "next/script";
 import { site } from "@/content/site";
 import { SmoothScroll } from "@/components/system/SmoothScroll";
 import { Cursor } from "@/components/system/Cursor";
+import { Wash } from "@/components/system/Wash";
 import { SoundDirector } from "@/components/system/SoundDirector";
 import { Loader } from "@/components/system/Loader";
 import { PageTransition } from "@/components/system/PageTransition";
@@ -73,12 +74,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body>
         {/* Decides motion and day/night before first paint; returning visitors get a shorter loader. */}
         <Script id="boot" strategy="beforeInteractive">
-          {`(function(d){var r=matchMedia('(prefers-reduced-motion: reduce)').matches,s=false;try{s=sessionStorage.getItem('erase:seen')==='1'}catch(e){}if(!r)d.classList.add('motion');var t=null;try{t=localStorage.getItem('erase:theme')}catch(e){}d.dataset.theme=t||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');if(s)d.classList.add('intro-skip')})(document.documentElement)`}
+          {`(function(d){var r=matchMedia('(prefers-reduced-motion: reduce)').matches,s=false;try{s=sessionStorage.getItem('erase:seen')==='1'}catch(e){}if(!r)d.classList.add('motion');var t=null;try{t=localStorage.getItem('erase:theme')}catch(e){}d.dataset.theme=t||'dark';if(s)d.classList.add('intro-skip')})(document.documentElement)`}
         </Script>
         <a href="#main" className="skip-link">
           Skip to content
         </a>
         <SmoothScroll />
+        <Wash />
         <Cursor />
         <PageTransition>
           <Nav />

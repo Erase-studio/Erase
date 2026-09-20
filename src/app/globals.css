@@ -45,7 +45,7 @@
 
 /* Night: the same studio with the lights off. Paper things stay paper. */
 html[data-theme="dark"] {
-  --bg: #0f1012;
+  --bg: #000;
   --fg: #e9e7e1;
   --muted: #8d8e94;
   --line: rgb(233 231 225 / 0.14);
@@ -109,7 +109,9 @@ html[data-theme="dark"] {
   }
 
   body {
-    background: var(--bg);
+    /* The page colour lives on <html>: the body stays clear so the wave (see
+       Wash) can sit between the paper and everything printed on it. */
+    background: transparent;
     color: var(--fg);
     font-family: var(--font-sans);
     font-size: 16px;
@@ -786,211 +788,179 @@ html[data-theme="dark"] {
 
   /* ───────────────────────── Loader ───────────────────────── */
 
-  /* A blank page that fills with ink. */
+  /* Plain black, whatever mood the page is in. */
   .loader {
     position: fixed;
     inset: 0;
     z-index: 800;
     overflow: hidden;
-    background: var(--bg);
-    color: var(--fg);
-    isolation: isolate;
+    color: #ecebe6;
+    --fg: #ecebe6;
+    --line: rgb(255 255 255 / 0.2);
+    --muted: #8a8f9c;
   }
 
-  /* On the way in the ink covers everything, so the page can go; the ink
-     then gathers into a drop with the site around it. */
-  .loader[data-phase="exit"] {
-    background: transparent;
-    pointer-events: none;
+  /* The page, in two halves. At the end it opens along the line. */
+  .loader__half {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 50.2%;
+    background: #000;
+    transition: transform 0.95s cubic-bezier(0.76, 0, 0.24, 1);
   }
 
-  .loader[data-skip="true"] {
-    display: none;
+  .loader__half[data-h="t"] {
+    top: 0;
   }
 
-  .loader__ink {
+  .loader__half[data-h="b"] {
+    bottom: 0;
+  }
+
+  .loader[data-phase="open"] .loader__half[data-h="t"] {
+    transform: translateY(-100%);
+  }
+
+  .loader[data-phase="open"] .loader__half[data-h="b"] {
+    transform: translateY(100%);
+  }
+
+  /* Waves running out across the dark, wherever the pointer goes. */
+  .loader__water {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
-  }
-
-  /* Type flips colour where the ink is (difference against the page). */
-  .loader__ui {
-    position: absolute;
-    inset: 0;
-    color: #fff;
-    mix-blend-mode: difference;
-    pointer-events: none;
     transition: opacity 0.35s var(--ease);
   }
 
-  .loader[data-phase="exit"] .loader__ui {
+  .loader[data-phase="open"] .loader__water {
     opacity: 0;
   }
 
-  .loader__corner {
-    position: absolute;
-    margin: 0;
-    max-width: 44vw;
-    font-size: 11px;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-
-  .loader__corner[data-c="tl"] {
-    left: var(--gutter);
-    top: var(--gutter);
-  }
-
-  .loader__corner[data-c="tr"] {
-    right: var(--gutter);
-    top: var(--gutter);
-    text-align: right;
-  }
-
-  .loader__corner[data-c="bl"] {
-    left: var(--gutter);
-    bottom: var(--gutter);
-  }
-
-  .loader__corner[data-c="br"] {
-    right: var(--gutter);
-    bottom: var(--gutter);
-    text-align: right;
-  }
-
-  .loader__count {
+  /* The eraser itself, turning in the middle of the page. */
+  .loader__object {
     position: absolute;
     inset: 0;
-    display: grid;
-    place-items: center;
-    margin: 0;
-    font-size: clamp(7rem, 30vw, 26rem);
-    font-weight: 500;
-    letter-spacing: -0.07em;
-    line-height: 1;
-    font-variant-numeric: tabular-nums;
-    transition:
-      opacity 0.5s var(--ease),
-      scale 0.9s var(--ease);
-  }
-
-  .loader[data-phase="gate"] .loader__count,
-  .loader[data-phase="exit"] .loader__count {
+    width: 100%;
+    height: 100%;
     opacity: 0;
-    scale: 0.9;
+    transition: opacity 0.6s var(--ease);
   }
 
-  /* When the page is full, the name surfaces in the ink. */
-  .loader__word {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 0 8vh;
-    font-size: clamp(5rem, 24vw, 22rem);
-    font-weight: 500;
-    letter-spacing: -0.065em;
-    line-height: 1;
-  }
-
-  .loader__word span {
-    display: inline-block;
-    opacity: 0;
-    translate: 0 0.3em;
-    filter: blur(14px);
-    transition:
-      opacity 0.7s var(--ease),
-      translate 1s var(--ease),
-      filter 0.9s var(--ease);
-  }
-
-  .loader[data-phase="gate"] .loader__word span {
+  .loader[data-object="on"] .loader__object {
     opacity: 1;
-    translate: 0 0;
-    filter: blur(0);
-    transition-delay: calc(0.1s + var(--i) * 0.07s);
   }
 
+  .loader[data-phase="open"] .loader__object {
+    opacity: 0;
+    transition: opacity 0.35s var(--ease);
+  }
+
+  /* The count, rolling, in the corner. */
+  .loader__meter {
+    position: absolute;
+    left: var(--gutter);
+    bottom: var(--gutter);
+    display: flex;
+    margin: 0;
+    font-size: clamp(2.1rem, 5.4vw, 4.4rem);
+    font-weight: 500;
+    letter-spacing: -0.05em;
+    line-height: 1;
+    transition: opacity 0.25s var(--ease);
+  }
+
+  .loader[data-phase="open"] .loader__meter {
+    opacity: 0;
+  }
+
+  .loader__dig {
+    display: block;
+    height: 1em;
+    overflow: hidden;
+  }
+
+  .loader__dig i {
+    display: block;
+    height: 1em;
+    font-style: normal;
+    font-variant-numeric: tabular-nums;
+    transform: translateY(calc(var(--d, 0) * -100%));
+    transition: transform 0.42s cubic-bezier(0.22, 0.7, 0.2, 1);
+  }
+
+  /* One small question, once, under the line. */
   .loader__gate {
     position: absolute;
     left: 50%;
-    bottom: max(10vh, 84px);
+    bottom: max(11vh, 92px);
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 14px;
+    gap: 10px;
+    margin: 0;
     translate: -50% 0;
-    animation: gate-in 0.9s var(--ease) 0.45s both;
-  }
-
-  .loader__enter {
-    display: inline-flex;
-    align-items: center;
-    gap: 14px;
-    height: 62px;
-    padding: 0 32px;
-    border: 0;
-    border-radius: 999px;
-    background: var(--bg);
-    color: var(--fg);
-    font: inherit;
-    font-size: 18px;
-    font-weight: 500;
-    letter-spacing: -0.02em;
-    white-space: nowrap;
-    cursor: pointer;
-    transition:
-      transform 0.5s var(--ease),
-      background-color 0.4s var(--ease),
-      color 0.4s var(--ease);
-  }
-
-  .loader__enter:hover {
-    transform: scale(1.04);
-    background: #2448ff;
-    color: #fff;
-  }
-
-  .loader__enter .snd {
-    height: 16px;
-  }
-
-  .loader__quiet {
-    padding: 6px 10px;
-    border: 0;
-    background: none;
-    color: var(--bg);
-    opacity: 0.7;
+    color: var(--muted);
     font-size: 11px;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    cursor: pointer;
-    transition: opacity 0.3s;
+    animation: gate-in 0.6s var(--ease) both;
+    transition: opacity 0.25s var(--ease);
   }
 
-  .loader__quiet:hover {
-    opacity: 1;
+  .loader[data-phase="open"] .loader__gate {
+    opacity: 0;
+  }
+
+  .loader__pick {
+    padding: 6px 2px;
+    white-space: nowrap;
+    border: 0;
+    background: none;
+    color: var(--muted);
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+    cursor: pointer;
+    background-image: linear-gradient(currentColor, currentColor);
+    background-repeat: no-repeat;
+    background-position: 0 100%;
+    background-size: 100% 1px;
+    transition:
+      color 0.3s var(--ease),
+      background-size 0.4s var(--ease);
+  }
+
+  .loader__pick:hover,
+  .loader__pick:focus-visible {
+    color: var(--fg);
+  }
+
+  .loader__pick:focus-visible {
+    outline: 1px solid currentColor;
+    outline-offset: 5px;
+    border-radius: 2px;
+  }
+
+  .loader__pick:last-of-type {
+    background-size: 0 1px;
+  }
+
+  .loader__pick:last-of-type:hover,
+  .loader__pick:last-of-type:focus-visible {
+    background-size: 100% 1px;
   }
 
   @keyframes gate-in {
     from {
       opacity: 0;
-      transform: translateY(24px);
+      transform: translateY(8px);
     }
   }
 
   @media (prefers-reduced-motion: reduce) {
     .loader {
-      display: none;
-    }
-  }
-
-  @media (max-width: 639px) {
-    .loader__corner[data-c="tr"],
-    .loader__corner[data-c="br"] {
       display: none;
     }
   }
@@ -1070,8 +1040,7 @@ html[data-theme="dark"] {
 
   /* ───────────────────────── Cursor ───────────────────────── */
 
-  .cur,
-  .cur-ink {
+  .cur {
     position: fixed;
     inset: 0;
     z-index: 951;
@@ -1079,16 +1048,26 @@ html[data-theme="dark"] {
     transition: opacity 0.3s;
   }
 
-  html:not([data-cursor-visible="true"]) :is(.cur, .cur-ink) {
+  html:not([data-cursor-visible="true"]) :is(.cur, .cur-dot) {
     opacity: 0;
   }
 
-  /* The ink inverts whatever it covers. */
-  .cur-ink {
+  /* A small graphite dot. Difference blending keeps it readable on paper,
+     on the dark windows and on blue alike. */
+  .cur-dot {
+    position: fixed;
     z-index: 950;
-    width: 100%;
-    height: 100%;
+    left: 0;
+    top: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #fff;
+    translate: -50% -50%;
     mix-blend-mode: difference;
+    will-change: transform, width, height;
   }
 
   /* Over a poster or the heap: a blue tag that says what happens. */
@@ -1126,6 +1105,16 @@ html[data-theme="dark"] {
     opacity: 1;
     scale: 1;
     clip-path: inset(0 0 0 0 round 999px);
+  }
+
+  /* The wave under the page (see Wash): it sits below every word. */
+  .wash {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
   }
 
   /* Letters under the lens swell smoothly. */
