@@ -1,0 +1,126 @@
+/**
+ * The studio page: the ledger's tabular receipts.
+ */
+
+@layer components {
+  /* ───────────────────────── The ledger ───────────────────────── */
+
+  .ldg {
+    position: relative;
+    padding-block: clamp(60px, 9vw, 130px);
+    overflow: clip;
+  }
+
+  /* One enormous grey word behind the table, cropped by the edges of the
+     screen. It's the only decoration on the page and it doesn't move. */
+  .ldg__ghost {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    margin: 0;
+    translate: -50% -50%;
+    font-size: clamp(9rem, 27vw, 26rem);
+    font-weight: 500;
+    letter-spacing: -0.06em;
+    line-height: 0.8;
+    white-space: nowrap;
+    color: color-mix(in srgb, var(--fg) 5%, transparent);
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .ldg__inner {
+    position: relative;
+    display: grid;
+    gap: clamp(26px, 3.6vw, 48px);
+  }
+
+  .ldg__head {
+    display: grid;
+    gap: 14px;
+    max-width: 52ch;
+  }
+
+  .ldg__lede {
+    max-width: 46ch;
+  }
+
+  .ldg__group {
+    display: grid;
+    gap: 10px;
+  }
+
+  .ldg__group-title {
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .ldg__rows {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* A ruled row: number, what it is, an aside, and the figure hard right. */
+  .ldg__row {
+    display: grid;
+    grid-template-columns: 3.4em 1fr auto;
+    align-items: baseline;
+    gap: 6px 16px;
+    padding-block: 14px;
+    border-bottom: 1px solid var(--line);
+    transition: background-color 0.4s var(--ease);
+  }
+
+  .ldg__row:hover {
+    background: color-mix(in srgb, var(--fg) 4%, transparent);
+  }
+
+  .ldg__n {
+    color: var(--muted);
+  }
+
+  .ldg__label {
+    font-size: clamp(1.05rem, 2vw, 1.5rem);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+  }
+
+  .ldg__note {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .ldg__value {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+    align-self: center;
+    font-size: clamp(1.4rem, 3.4vw, 2.6rem);
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.04em;
+    text-align: right;
+  }
+
+  .ldg__stamp {
+    max-width: 70ch;
+  }
+
+  @media (min-width: 720px) {
+    .ldg__row {
+      grid-template-columns: 3.4em minmax(0, 1fr) minmax(0, 20ch) auto;
+    }
+
+    .ldg__note {
+      grid-column: 3;
+      grid-row: 1;
+      text-align: right;
+    }
+
+    .ldg__value {
+      grid-column: 4;
+      grid-row: 1;
+      min-width: 6ch;
+    }
+  }
+}

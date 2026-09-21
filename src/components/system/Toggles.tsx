@@ -43,6 +43,8 @@ export function ThemeToggle() {
 
   const apply = (next: Theme) => {
     document.documentElement.dataset.theme = next;
+    // Phone browser chrome should match the page it's sitting above.
+    document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')?.setAttribute("content", next === "dark" ? "#000000" : "#ecebe6");
     try {
       localStorage.setItem("erase:theme", next);
     } catch {}

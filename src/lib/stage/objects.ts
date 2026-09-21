@@ -87,8 +87,11 @@ export function pencilTipGeometry() {
   return mergeGeometries([paint(wood, new THREE.Color("#d8b98c")), paint(lead, new THREE.Color("#2a2b2e"))])!;
 }
 
-export function materials(env: THREE.Texture, family: string) {
+export function materials(env: THREE.Texture | null, family: string) {
   const rubber = new THREE.MeshPhysicalMaterial({
+    // Without a light probe the rubber would read grey in its shadows; a faint
+    // glow of its own keeps it looking like white rubber, not putty.
+    emissive: env ? new THREE.Color(0x000000) : new THREE.Color(0x2b2a27),
     roughness: 0.62,
     sheen: 0.4,
     sheenRoughness: 0.8,

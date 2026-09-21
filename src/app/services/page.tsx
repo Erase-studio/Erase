@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { engagements, faqs, stack } from "@/content/agency";
 import { PageHead } from "@/components/site/PageHead";
-import { ServiceRows } from "@/components/home/ServiceRows";
+import { Suite } from "@/components/services/Suite";
 import { Faq } from "@/components/site/Faq";
 import { TransitionLink } from "@/components/system/TransitionLink";
 import { Roll } from "@/components/ui/Roll";
@@ -19,7 +19,7 @@ export default function ServicesPage() {
       <PageHead
         index="(Index) Services"
         title="Services"
-        lede="Six disciplines, one small team. We take a website from the first workshop to launch, and keep improving it after."
+        lede="Six disciplines, one studio. We take a website from the first workshop to launch, and keep improving it after."
       >
         <ul className="chips" aria-label="Tools we build with">
           {stack.map((s) => (
@@ -30,7 +30,7 @@ export default function ServicesPage() {
         </ul>
       </PageHead>
 
-      <ServiceRows kicker="What we do" />
+      <Suite />
 
       <section className="eng frame" aria-labelledby="eng-title">
         <header className="eng__head">

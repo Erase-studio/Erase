@@ -184,7 +184,7 @@ export function Letter() {
 
   return (
     <div ref={rootRef} className="ct-stage" data-status={status}>
-      <div className="ct-paper" data-wiping={wiping} data-line-hide>
+      <div className="ct-paper" data-surface="light" data-wiping={wiping} data-line-hide>
         <form ref={formRef} className="ct-letter" onSubmit={onSubmit} noValidate inert={done || status === "sending"} aria-label="Letter to Erase">
           <p className="ct-line ct-dear">Dear Erase,</p>
 

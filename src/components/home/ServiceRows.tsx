@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { services } from "@/content/agency";
 import { ServiceSketch } from "./ServiceSketch";
+import { TransitionLink } from "@/components/system/TransitionLink";
+import { Roll } from "@/components/ui/Roll";
 
 /**
  * Six services as big rows. Point at one and a blue marker swipes behind its
@@ -10,7 +12,9 @@ import { ServiceSketch } from "./ServiceSketch";
  * pencil sketches the service on it, with what it covers. On touch (or with
  * the keyboard) each row opens in place with the same sketch.
  */
-export function ServiceRows({ kicker = "(03) What we do" }: { kicker?: string }) {
+export function ServiceRows({ kicker = "(03) What we do", limit }: { kicker?: string; limit?: number }) {
+  // The home page shows the first few and sends you on; /services has them all.
+  const shownServices = limit ? services.slice(0, limit) : services;
   const [hover, setHover] = useState<number | null>(null);
   const [open, setOpen] = useState<number | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -54,7 +58,7 @@ export function ServiceRows({ kicker = "(03) What we do" }: { kicker?: string })
   }, []);
 
   const active = hover ?? open;
-  const shown = hover !== null ? services[hover] : null;
+  const shown = hover !== null ? shownServices[hover] : null;
 
   return (
     <section className="svc frame" data-sound="services" aria-labelledby="svc-title">
@@ -68,7 +72,7 @@ export function ServiceRows({ kicker = "(03) What we do" }: { kicker?: string })
       </header>
 
       <ol ref={listRef} className="svc__list" data-active={active !== null} onPointerLeave={() => setHover(null)}>
-        {services.map((s, i) => (
+        {shownServices.map((s, i) => (
           <li key={s.id} id={s.id} className="svc__row" data-on={active === i} data-open={open === i} data-reveal="fade">
             <button
               type="button"
@@ -104,12 +108,21 @@ export function ServiceRows({ kicker = "(03) What we do" }: { kicker?: string })
         ))}
       </ol>
 
+      {limit && (
+        <p className="svc__rest" data-reveal="fade">
+          <TransitionLink href="/services" title="Services" className="pill">
+            <Roll>{`All ${services.length} services`}</Roll>
+            <i className="pill__dot" aria-hidden="true" />
+          </TransitionLink>
+        </p>
+      )}
+
       <div ref={cardRef} className="svc__card" data-show={hover !== null} aria-hidden="true">
         {shown && (
           <>
             <ServiceSketch key={shown.id} id={shown.id} />
             <p className="svc__card-text">{shown.short}</p>
-            <p className="svc__card-tags mono">{shown.deliverables.join(" · ")}</p>
+            <p className="svc__card-tags mono">{shown.deliverables.join(", ")}</p>
           </>
         )}
       </div>

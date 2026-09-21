@@ -166,7 +166,7 @@ function hatch(x0: number, y0: number, w: number, h: number, gap: number, rnd: (
 
 function talk(rnd: () => number): Op[] {
   return [
-    text("Call notes · week 0", 70, 92, { size: 24, weight: 600 }),
+    text("Call notes, week 0", 70, 92, { size: 24, weight: 600 }),
     line([70, 106], [360, 110], { width: 2 }, rnd),
     text("Who is it for?", 90, 184, { size: 38, italic: true }),
     ellipse(262, 170, 82, 36, { width: 2, color: BLUE }, rnd),

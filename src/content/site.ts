@@ -18,30 +18,3 @@ export const site = {
     { label: "Awwwards", href: "" }, // REPLACE
   ],
 } as const;
-
-/**
- * While `name` is empty the site shows `alias` ("The designer"), which reads as
- * intentional. Fill in real names, initials and an optional photo before launch.
- */
-export const founders: {
-  name: string;
-  alias: string;
-  initials: string;
-  role: string;
-  photo: string;
-}[] = [
-  {
-    name: "", // REPLACE
-    alias: "The designer",
-    initials: "D", // REPLACE with initials
-    role: "Design & direction",
-    photo: "", // optional: /founders/name.jpg
-  },
-  {
-    name: "", // REPLACE
-    alias: "The developer",
-    initials: "</>", // REPLACE with initials
-    role: "Engineering & performance",
-    photo: "",
-  },
-];

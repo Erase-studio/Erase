@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { TransitionLink } from "@/components/system/TransitionLink";
+import { Roll } from "@/components/ui/Roll";
 
 /**
  * The home page's last word: the pencil scribbles out "template?" and circles
@@ -23,8 +24,8 @@ export function FooterCta() {
         <br />
         Let’s{" "}
         <TransitionLink
-          href="/contact"
-          title="Contact"
+          href="/erase-it"
+          title="Erase it"
           className="fc__erase"
           data-line="0.5,-0.12,0;0.95,-0.04,50;1.07,0.5,0;0.93,1.08,-40;0.5,1.18,0;0.1,1.06,40;-0.02,0.52,0;0.1,-0.04,-30;0.52,-0.16,0;0.84,-0.08,20"
         >
@@ -39,7 +40,7 @@ export function FooterCta() {
             <b />
           </span>
           <span className="eb__sleeve">
-            Write to us <span aria-hidden="true">→</span>
+            <Roll>Write to us</Roll> <span aria-hidden="true">→</span>
           </span>
         </TransitionLink>
       </div>

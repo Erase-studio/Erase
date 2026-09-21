@@ -148,7 +148,7 @@
   }
 
   .wl__kind[data-kind="Live"] {
-    color: var(--color-blue);
+    color: var(--blue-ink);
   }
 
   .wl__link > span:nth-child(3),
@@ -286,8 +286,32 @@
     min-width: 0;
   }
 
-  .cs-hero__note {
-    margin: 14px 0 0;
+  .cs-meta__wide {
+    grid-column: 1 / -1;
+  }
+
+  .cs-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  /* An award, when there is one: said once, plainly. */
+  .cs-award {
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+    gap: 10px;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .cs-award i {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent, var(--color-blue));
   }
 
   /* The reel: a tall section whose screen sticks while chapters turn. */
@@ -326,7 +350,7 @@
   }
 
   .cs-reel__tab span {
-    color: var(--color-blue);
+    color: var(--blue-ink);
     opacity: 0;
     transition: opacity 0.4s var(--ease);
   }
@@ -409,16 +433,19 @@
 
   .cs-ch__big {
     max-width: 16ch;
-    font-size: clamp(2.4rem, 6.4vw, 7.2rem);
+    font-size: clamp(2.2rem, 5.4vw, 6.2rem);
     font-weight: 500;
     letter-spacing: -0.055em;
     line-height: 0.95;
     text-wrap: balance;
   }
 
-  .cs-ch__body {
-    max-width: 34ch;
+  .cs-ch__text {
+    max-width: 58ch;
     color: var(--muted);
+    font-size: clamp(15px, 1.25vw, 19px);
+    line-height: 1.5;
+    text-wrap: pretty;
   }
 
   /* The problem gets a pencil line through it. */
@@ -449,16 +476,59 @@
   }
 
   .cs-ch__quote {
-    max-width: 18ch;
-    font-size: clamp(2.2rem, 5.6vw, 6.4rem);
+    max-width: 30ch;
+    font-size: clamp(1.45rem, 3.2vw, 3.4rem);
     font-weight: 500;
-    letter-spacing: -0.05em;
-    line-height: 1;
-    text-wrap: balance;
+    letter-spacing: -0.035em;
+    line-height: 1.08;
+    text-wrap: pretty;
   }
 
-  .cs-ch__quote span {
-    color: var(--color-blue);
+  .cs-ch__quote:not([data-plain="true"])::before {
+    content: "“";
+    color: var(--blue-ink);
+  }
+
+  .cs-ch__quote:not([data-plain="true"])::after {
+    content: "”";
+    color: var(--blue-ink);
+  }
+
+  /* What happened, then what it's made of. */
+  .cs-ch__result {
+    max-width: 36ch;
+    font-size: clamp(1.3rem, 2.5vw, 2.7rem);
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    line-height: 1.12;
+    text-wrap: pretty;
+  }
+
+  .cs-stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .cs-stack li {
+    padding: 7px 14px;
+    border-radius: 999px;
+    box-shadow: inset 0 0 0 1px var(--line);
+    font-size: 12px;
+    opacity: 0;
+    translate: 0 12px;
+    transition:
+      opacity 0.4s var(--ease),
+      translate 0.6s var(--ease);
+  }
+
+  .cs-ch--result[data-on="true"] .cs-stack li {
+    opacity: 1;
+    translate: 0 0;
+    transition-delay: calc(0.35s + var(--i) * 0.06s);
   }
 
   /* Four calls, dealt like cards onto the desk. */
@@ -471,10 +541,24 @@
     list-style: none;
   }
 
+  .cs-cards[data-count="3"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  @media (min-width: 600px) {
+    .cs-cards[data-count="3"] {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
   @media (min-width: 900px) {
     .cs-cards {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(min(var(--k), 4), minmax(0, 1fr));
       gap: 16px;
+    }
+
+    .cs-cards[data-count="6"] {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
     }
   }
 
@@ -482,14 +566,14 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
-    min-height: clamp(9rem, 34svh, 22rem);
+    min-height: clamp(8rem, 34svh, 22rem);
     padding: clamp(14px, 1.6vw, 24px);
     border-radius: 14px;
     background: var(--ghost-bg);
     box-shadow: inset 0 0 0 1px var(--line);
     opacity: 0;
     translate: 0 40px;
-    rotate: calc((var(--i) - 1.5) * 3deg);
+    rotate: calc((var(--i) - (var(--k) - 1) / 2) * 3deg);
     transition:
       opacity 0.4s var(--ease),
       translate 0.7s var(--ease),
@@ -499,12 +583,12 @@
   .cs-ch--calls[data-on="true"] .cs-card {
     opacity: 1;
     translate: 0 0;
-    rotate: calc((var(--i) - 1.5) * 0.8deg);
+    rotate: calc((var(--i) - (var(--k) - 1) / 2) * 0.6deg);
     transition-delay: calc(0.15s + var(--i) * 0.09s);
   }
 
   .cs-card__num {
-    color: var(--color-blue);
+    color: var(--blue-ink);
     margin-bottom: auto;
   }
 
@@ -521,53 +605,8 @@
     line-height: 1.4;
   }
 
-  /* The system: the colours rise, then the type. */
-  .cs-chips {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 10px;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .cs-chips li {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    min-width: 0;
-    font-size: 11px;
-  }
-
-  .cs-chips__bar {
-    height: clamp(5rem, 22svh, 14rem);
-    margin-bottom: 8px;
-    border-radius: 12px;
-    background: var(--c);
-    box-shadow: inset 0 0 0 1px var(--line);
-    transform-origin: bottom;
-    scale: 1 0;
-    transition: scale 0.8s var(--ease);
-  }
-
-  .cs-ch--system[data-on="true"] .cs-chips__bar {
-    scale: 1 1;
-    transition-delay: calc(0.15s + var(--i) * 0.08s);
-  }
-
-  .cs-font {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding-top: 2vh;
-    border-top: 1px solid var(--line);
-  }
-
-  .cs-font__sample {
-    font-size: clamp(1.8rem, 4.6vw, 5rem);
-    font-weight: 500;
-    letter-spacing: -0.05em;
-    line-height: 0.95;
+  .cs-cards[data-count="6"] .cs-card {
+    min-height: clamp(7rem, 22svh, 13rem);
   }
 
   @media (max-width: 599px) {
@@ -598,12 +637,32 @@
     .cs-cards {
       gap: 8px;
     }
+
+    .cs-card,
+    .cs-cards[data-count="6"] .cs-card {
+      min-height: 0;
+      gap: 6px;
+      padding: 12px;
+    }
+
+    .cs-card__num {
+      margin-bottom: 4px;
+    }
+
+    .cs-card__title {
+      font-size: 1.05rem;
+    }
+
+    .cs-card__body {
+      font-size: 12.5px;
+      line-height: 1.35;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {
     .cs-ch,
     .cs-card,
-    .cs-chips__bar {
+    .cs-stack li {
       transition-duration: 0.01s !important;
     }
   }
@@ -863,7 +922,7 @@
 
   .law__num {
     grid-row: span 3;
-    color: var(--color-blue);
+    color: var(--blue-ink);
   }
 
   @media (min-width: 1024px) {
@@ -1242,7 +1301,11 @@
   }
 
   .ct-wipe {
-    padding: 0;
+    /* Small type, but a thumb still has to land on it. */
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    padding: 4px 0;
     border: 0;
     background: none;
     color: var(--muted);

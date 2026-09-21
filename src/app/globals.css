@@ -1,7 +1,11 @@
 @import "tailwindcss";
-@import "../styles/minis.css";
+@import "../styles/frame.css";
 @import "../styles/home.css";
 @import "../styles/pages.css";
+@import "../styles/spine.css";
+@import "../styles/erase.css";
+@import "../styles/studio.css";
+@import "../styles/suite.css";
 
 /* ───────────────────────── Tokens ───────────────────────── */
 
@@ -40,6 +44,8 @@
   --solid-bg: #121316;
   --solid-fg: #ecebe6;
   --ghost-bg: rgb(18 19 22 / 0.06);
+  /* The brand blue, nudged dark enough to pass as small text on paper. */
+  --blue-ink: #2448ff;
   color-scheme: light;
 }
 
@@ -52,6 +58,8 @@ html[data-theme="dark"] {
   --solid-bg: #e9e7e1;
   --solid-fg: #0f1012;
   --ghost-bg: rgb(233 231 225 / 0.08);
+  /* …and light enough to pass on black. */
+  --blue-ink: #5b7bff;
   color-scheme: dark;
 }
 
@@ -70,6 +78,7 @@ html[data-theme="dark"] {
   --solid-bg: #e8ecf4;
   --solid-fg: #0b0c0e;
   --ghost-bg: rgb(232 236 244 / 0.08);
+  --blue-ink: #5b7bff;
   color-scheme: dark;
 }
 
@@ -698,39 +707,58 @@ html[data-theme="dark"] {
 
   /* ───────────────────────── Menu ───────────────────────── */
 
+  /* A stack of cards dropped from under the button, not a takeover: the page
+     behind keeps running, keeps scrolling, and stays readable. */
   .menu {
     position: fixed;
-    inset: 0;
+    top: calc(var(--nav-h) - 6px);
+    right: var(--gutter);
     z-index: 300;
     display: grid;
-    grid-template-rows: auto 1fr auto;
-    padding: 0 var(--gutter) var(--gutter);
-    background: var(--bg);
-    color: var(--fg);
-    clip-path: inset(0 0 100% 0 round 0 0 var(--radius) var(--radius));
+    gap: 10px;
+    width: min(340px, calc(100vw - var(--gutter) * 2));
     visibility: hidden;
-    transition:
-      clip-path 0.9s var(--ease-io),
-      visibility 0s linear 0.9s;
+    transition: visibility 0s linear 0.5s;
   }
 
   .menu[data-open="true"] {
-    clip-path: inset(0 0 0 0 round 0);
     visibility: visible;
+    transition: visibility 0s;
+  }
+
+  .menu__card {
+    padding: 22px;
+    border-radius: var(--radius);
+    background: var(--solid-bg);
+    color: var(--solid-fg);
+    opacity: 0;
+    transform: translate3d(0, -14px, 0) scale(0.97);
+    transform-origin: top right;
     transition:
-      clip-path 0.9s var(--ease-io),
-      visibility 0s;
+      opacity 0.35s var(--ease),
+      transform 0.5s var(--ease);
+  }
+
+  .menu[data-open="true"] .menu__card {
+    opacity: 1;
+    transform: none;
+    transition-delay: calc(var(--c, 0) * 60ms);
+  }
+
+  /* The card that sends you away from the site wears the other colour. */
+  .menu__card--flip {
+    background: var(--bg);
+    color: var(--fg);
+    box-shadow: inset 0 0 0 1px var(--line);
   }
 
   .menu__top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: var(--nav-h);
+    display: none;
   }
 
   .menu__links {
-    align-self: center;
+    display: grid;
+    gap: 2px;
     list-style: none;
     margin: 0;
     padding: 0;
@@ -743,47 +771,96 @@ html[data-theme="dark"] {
   .menu__links a {
     display: flex;
     align-items: baseline;
-    gap: 18px;
-    padding-block: 2px;
-    /* Five links must fit any window height. */
-    font-size: clamp(2.2rem, min(9.5vw, 12.5svh), 8.5rem);
+    gap: 14px;
+    padding-block: 7px;
+    font-size: 1.6rem;
     font-weight: 500;
-    letter-spacing: -0.045em;
-    line-height: 1;
-    transform: translate3d(0, 105%, 0);
-    transition: transform 0.9s var(--ease) calc(0.25s + var(--i) * 60ms);
+    letter-spacing: -0.03em;
+    line-height: 1.1;
   }
 
-  .menu[data-open="true"] .menu__links a {
-    transform: none;
+  .menu__links a .roll {
+    transition: opacity 0.3s var(--ease);
   }
 
-  .menu__links a[aria-current="page"] {
-    color: var(--color-blue);
+  .menu__links a:hover .roll {
+    opacity: 0.6;
+  }
+
+  /* A dot on the page you're already on, the way a map marks "you are here". */
+  .menu__links a[aria-current="page"]::after {
+    content: "";
+    width: 6px;
+    height: 6px;
+    margin-left: auto;
+    border-radius: 50%;
+    background: var(--color-blue);
+    translate: 0 -0.45em;
   }
 
   .menu__links .mono {
     translate: 0 -0.3em;
-    color: var(--muted);
+    opacity: 0.45;
+  }
+
+  .menu__note {
+    display: grid;
+    gap: 8px;
+  }
+
+  .menu__note p {
+    margin: 0;
+  }
+
+  .menu__note .menu__lead {
+    font-size: 1.05rem;
+    letter-spacing: -0.01em;
+    line-height: 1.35;
+  }
+
+  .menu__labs {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 20px 22px;
+    font-size: 1.3rem;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+  }
+
+  .menu__labs span:last-child {
+    transition: translate 0.4s var(--ease);
+  }
+
+  .menu__labs:hover span:last-child {
+    translate: 4px -4px;
   }
 
   .menu__foot {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 16px;
-    color: var(--muted);
-    opacity: 0;
-    transition: opacity 0.6s var(--ease);
-  }
-
-  .menu[data-open="true"] .menu__foot {
-    opacity: 1;
-    transition-delay: 0.6s;
+    display: grid;
+    gap: 4px;
+    opacity: 0.55;
   }
 
   .menu__foot a {
-    color: var(--fg);
+    color: inherit;
+  }
+
+  /* Tapping anywhere else closes it, without a black sheet over the page. */
+  .menu__veil {
+    position: fixed;
+    inset: 0;
+    z-index: 299;
+    background: transparent;
+    border: 0;
+    cursor: default;
+  }
+
+  @media (max-width: 480px) {
+    .menu__links a {
+      font-size: 1.4rem;
+    }
   }
 
   /* ───────────────────────── Loader ───────────────────────── */

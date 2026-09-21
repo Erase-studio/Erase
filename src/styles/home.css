@@ -169,13 +169,13 @@
 
   .st__keep em {
     font-style: normal;
-    color: var(--color-blue);
+    color: var(--blue-ink);
   }
 
   /* Crumple: the template becomes a ball of paper. */
   .cr {
     position: relative;
-    height: 330vh;
+    height: 260vh;
   }
 
   .cr__sticky {
@@ -185,33 +185,19 @@
     height: 100svh;
   }
 
-  .cr__kicker {
-    position: absolute;
-    top: calc(var(--nav-h) + 8px);
-    left: var(--gutter);
-  }
-
   .cr__slot {
     position: absolute;
     left: 50%;
     top: 50%;
     width: min(66vw, 1040px);
     aspect-ratio: 16 / 10;
-    translate: -50% -52%;
+    translate: -50% -50%;
   }
 
   @media (max-width: 767px) {
     .cr__slot {
       width: 88vw;
     }
-  }
-
-  .cr__cap {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: calc(var(--gutter) + 8px);
-    text-align: center;
   }
 
   .cr__title {
@@ -231,6 +217,32 @@
     opacity: 0;
   }
 
+  /* The one word that doesn't survive gets struck out as the line lands. */
+  .cr__struck {
+    position: relative;
+    color: var(--muted);
+  }
+
+  .cr__struck::after {
+    content: "";
+    position: absolute;
+    left: -0.04em;
+    right: -0.04em;
+    top: 54%;
+    height: 0.07em;
+    border-radius: 99px;
+    background: var(--fg);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.9s cubic-bezier(0.7, 0, 0.12, 1) 0.15s;
+  }
+
+  .cr__title[data-on="true"] .cr__struck::after,
+  html:not(.motion) .cr__struck::after,
+  html[data-stage="off"] .cr__struck::after {
+    transform: scaleX(1);
+  }
+
   html:not(.motion) .cr,
   html[data-stage="off"] .cr {
     height: auto;
@@ -243,9 +255,7 @@
   }
 
   html:not(.motion) .cr__slot,
-  html:not(.motion) .cr__cap,
-  html[data-stage="off"] .cr__slot,
-  html[data-stage="off"] .cr__cap {
+  html[data-stage="off"] .cr__slot {
     display: none;
   }
 
@@ -257,7 +267,7 @@
   /* Work stack: peel the posters. */
   .ws {
     position: relative;
-    height: calc(var(--n) * 100vh + 40vh);
+    height: calc(var(--n) * 82vh + 28vh);
   }
 
   .ws__sticky {
@@ -377,7 +387,7 @@
   }
 
   .ws__meta [data-kind="Live"] {
-    color: var(--color-blue);
+    color: var(--blue-ink);
   }
 
   .ws__dots {
@@ -448,7 +458,7 @@
   }
 
   .svc__num {
-    color: var(--color-blue);
+    color: var(--blue-ink);
   }
 
   .svc__name {
@@ -710,7 +720,7 @@
   /* Process: one sheet becomes the website as you scroll. */
   .pr {
     position: relative;
-    height: 520vh;
+    height: 260vh;
   }
 
   .pr__sticky {
@@ -916,7 +926,7 @@
 
   @media (max-width: 899px) {
     .pr {
-      height: 460vh;
+      height: 300vh;
     }
 
     .pr__sticky {
@@ -1294,12 +1304,12 @@
   /* Dive: step inside the page and follow the eraser. */
   .dv {
     position: relative;
-    height: 720vh;
+    height: 580vh;
   }
 
   @media (max-width: 767px) {
     .dv {
-      height: 600vh;
+      height: 500vh;
     }
   }
 

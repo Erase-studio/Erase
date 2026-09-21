@@ -1,0 +1,71 @@
+/* A browser window around a real screenshot of the product. */
+
+@layer components {
+  .bframe {
+    position: relative;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #0b0b0c;
+    box-shadow:
+      0 0 0 1px rgb(255 255 255 / 0.08),
+      0 40px 80px -30px rgb(0 0 0 / 0.55);
+  }
+
+  .bframe__bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 30px;
+    padding-inline: 12px;
+    background: #1b1c1f;
+  }
+
+  .bframe__bar i {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #3a3c41;
+  }
+
+  .bframe__url {
+    margin-inline: auto;
+    padding: 2px 14px;
+    border-radius: 6px;
+    background: #26282c;
+    color: #9a9da3;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.02em;
+  }
+
+  .bframe__view {
+    position: relative;
+    aspect-ratio: 1.75;
+    overflow: hidden;
+    background: #0b0b0c;
+  }
+
+  .bframe__shots {
+    position: absolute;
+    inset: 0;
+  }
+
+  .bframe__view[data-hover="true"] .bframe__shots {
+    inset: -2%;
+  }
+
+  .bframe__shot {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+  }
+
+  /* A product with a themed UI answers the site's own light switch. */
+  html[data-theme="light"] .bframe__shot[data-theme-shot="dark"],
+  html:not([data-theme="light"]) .bframe__shot[data-theme-shot="light"] {
+    visibility: hidden;
+  }
+}

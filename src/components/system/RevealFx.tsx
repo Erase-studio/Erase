@@ -2,7 +2,8 @@
 
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { gsap, onReveal, SplitText } from "@/lib/gsap";
+import { gsap, onReveal } from "@/lib/gsap";
+import type { SplitText } from "gsap/SplitText";
 
 /**
  * Page-wide entrances, declared in markup:
@@ -35,10 +36,17 @@ export function RevealFx() {
     };
 
     const cancel = onReveal(() => {
-      document.fonts.ready.then(() => {
+      // SplitText is the one heavy plugin on the page, and only line reveals
+      // need it, so it arrives with them rather than in the first bundle.
+      const needsSplit = els.some((el) => el.dataset.reveal === "lines");
+      const ready = Promise.all([
+        document.fonts.ready,
+        needsSplit ? import("gsap/SplitText").then((m) => (gsap.registerPlugin(m.SplitText), m.SplitText)) : Promise.resolve(null),
+      ]);
+      ready.then(([, Split]) => {
         for (const el of els) {
-          if (el.dataset.reveal !== "lines" || el.classList.contains("is-split")) continue;
-          splits.push(SplitText.create(el, { type: "lines", mask: "lines", linesClass: "reveal-line", autoSplit: false }));
+          if (!Split || el.dataset.reveal !== "lines" || el.classList.contains("is-split")) continue;
+          splits.push(Split.create(el, { type: "lines", mask: "lines", linesClass: "reveal-line", autoSplit: false }));
           gsap.set(el.querySelectorAll(".reveal-line"), { yPercent: 110 });
           el.classList.add("is-split");
         }

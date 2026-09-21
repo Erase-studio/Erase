@@ -2,16 +2,14 @@
 
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { SplitText } from "gsap/SplitText";
-import { ScrambleTextPlugin } from "gsap/ScrambleTextPlugin";
-import { CustomEase } from "gsap/CustomEase";
-import { DrawSVGPlugin } from "gsap/DrawSVGPlugin";
 
+/**
+ * The two pieces every page needs. Anything heavier — SplitText for the line
+ * reveals, DrawSVG for the drawn portraits — is fetched by the one component
+ * that uses it, so a page without them never carries the code.
+ */
 if (typeof window !== "undefined") {
-  gsap.registerPlugin(ScrollTrigger, SplitText, ScrambleTextPlugin, CustomEase, DrawSVGPlugin);
-  // House curves: a quick pencil stroke, and a heavy eraser pass.
-  CustomEase.create("stroke", "0.7, 0, 0.12, 1");
-  CustomEase.create("rub", "0.83, 0, 0.17, 1");
+  gsap.registerPlugin(ScrollTrigger);
   gsap.defaults({ ease: "expo.out", duration: 1 });
 }
 
@@ -48,4 +46,4 @@ export function onReveal(cb: () => void) {
 export const reducedMotion = () =>
   typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-export { gsap, ScrollTrigger, SplitText };
+export { gsap, ScrollTrigger };

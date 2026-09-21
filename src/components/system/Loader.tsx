@@ -76,8 +76,11 @@ export function Loader() {
     // ─── Timeline ───
     let ready = false;
     Promise.all([document.fonts.ready, whenStageReady()]).then(() => (ready = true));
-    const t0 = performance.now();
-    const minDur = seen ? 900 : 2000;
+    // Time is counted from the moment the browser started this page, not from
+    // the moment React got here — otherwise the count begins after the wait it
+    // is supposed to be reporting, and the loader outstays the load.
+    const t0 = 0;
+    const minDur = seen ? 900 : 2200;
     let shown = 0;
     let last = t0;
     let started = false;
@@ -112,7 +115,8 @@ export function Loader() {
       // The count never runs past what's really loaded, and never sprints to
       // catch up after the browser has been busy: it stays one steady climb.
       const want = ready ? time : Math.min(time, 0.93);
-      const rate = Math.min(seen ? 1.1 : 0.62, Math.max(0, want - shown) * 4);
+      // Someone who has seen it before gets the short version.
+      const rate = Math.min(seen ? 2.4 : 0.62, Math.max(0, want - shown) * 4);
       shown = Math.min(want, shown + rate * dt);
       if (want >= 1 && shown > 0.999) shown = 1;
       setCount(shown * 100);
@@ -123,7 +127,7 @@ export function Loader() {
         done = true;
         sound.tick();
         cheer?.();
-        after(seen ? 520 : 760, () => (seen ? open() : setPhase("gate")));
+        after(seen ? 320 : 760, () => (seen ? open() : setPhase("gate")));
       }
       raf = requestAnimationFrame(step);
     };
@@ -146,18 +150,21 @@ export function Loader() {
       try {
         const [THREE, objects] = await Promise.all([import("three"), import("@/lib/stage/objects")]);
         if (cancelled) return;
+        const coarse = window.matchMedia("(pointer: coarse)").matches;
         const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: "high-performance" });
-        renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+        renderer.setPixelRatio(Math.min(coarse ? 1.5 : 2, window.devicePixelRatio || 1));
         renderer.outputColorSpace = THREE.SRGBColorSpace;
         renderer.toneMapping = THREE.NeutralToneMapping;
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 50);
         camera.position.set(0, 0, 4.6);
 
+        // Phones skip the light probe: it's the slowest thing the loader does,
+        // and on a small screen the key and rim lights carry the look alone.
         const pmrem = new THREE.PMREMGenerator(renderer);
-        const { RoomEnvironment } = await import("three/addons/environments/RoomEnvironment.js");
+        const { studioEnvironment } = await import("@/lib/stage/studioEnv");
         if (cancelled) return;
-        const env = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+        const env = coarse ? null : studioEnvironment(pmrem);
 
         const mats = objects.materials(env, getComputedStyle(document.body).fontFamily);
         mats.rubber.color = new THREE.Color("#f4f3ee");
@@ -500,6 +507,7 @@ export function Loader() {
           window.removeEventListener("resize", size);
           [eg, sg, shadowG, eyeG, smileG, cheekG, pGeo].forEach((g) => g.dispose());
           [card, ink, cheekM, shadowM, shadowT, pMat, env, ...Object.values(mats)].forEach((d) => {
+            if (!d) return;
             (d as { map?: { dispose(): void } }).map?.dispose?.();
             d.dispose();
           });
@@ -564,7 +572,7 @@ export function Loader() {
           <button type="button" className="loader__pick" autoFocus onClick={() => gate.current?.(true)}>
             Enter with sound
           </button>
-          <span aria-hidden="true">·</span>
+          <span aria-hidden="true">/</span>
           <button type="button" className="loader__pick" onClick={() => gate.current?.(false)}>
             Quietly
           </button>

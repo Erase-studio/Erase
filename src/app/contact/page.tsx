@@ -23,7 +23,7 @@ export default function ContactPage() {
             Write us a letter.
           </h1>
           <p className="lede ct__lede" data-reveal="fade" data-delay="0.3">
-            Fill in the blanks. It comes straight to the two of us, and we answer every one.
+            Fill in the blanks. It goes straight to the people who’ll do the work, and we answer every one.
           </p>
           <div className="ct__foot" data-reveal="fade" data-delay="0.4">
             <Desk />

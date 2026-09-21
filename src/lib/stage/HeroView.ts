@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import type { Frame, Shared, View } from "./Stage";
+import { warmScene, type Frame, type Shared, type View } from "./Stage";
 import { Clump, makeBody, type Body } from "./clump";
 import { eraserGeometry, materials, PALETTE, pencilBodyGeometry, pencilTipGeometry, sleeveGeometry } from "./objects";
 import { sound } from "@/lib/sound";
@@ -182,13 +182,7 @@ export class HeroView implements View {
   private settled = false;
 
   warm(r: THREE.WebGLRenderer) {
-    r.compile(this.scene, this.camera);
-    this.scene.traverse((o) => {
-      const m = (o as THREE.Mesh).material as THREE.Material & { map?: THREE.Texture; uniforms?: Record<string, { value: unknown }> };
-      if (m?.map) r.initTexture(m.map);
-      const t = m?.uniforms?.uMap?.value;
-      if (t instanceof THREE.Texture) r.initTexture(t);
-    });
+    return warmScene(r, this.scene, this.camera);
   }
 
   render(r: THREE.WebGLRenderer) {

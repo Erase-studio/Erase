@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import type { Frame, Shared, View } from "./Stage";
+import { warmScene, type Frame, type Shared, type View } from "./Stage";
 import { eraserGeometry, materials, PALETTE, sleeveGeometry } from "./objects";
 import { clicheAtlas, stickerAtlas } from "./diveArt";
 import { sound } from "@/lib/sound";
@@ -42,6 +42,7 @@ export class DiveView implements View {
   private section: HTMLElement;
   private countEl: HTMLElement | null;
   private p = 0;
+  private joined = false;
   private hero = new THREE.Group(); // the character
   private body = new THREE.Group(); // squash & stretch lives here
   private eyes: THREE.Mesh[] = [];
@@ -67,14 +68,6 @@ export class DiveView implements View {
   private prev = new THREE.Vector3();
   private vel = new THREE.Vector3();
   private rig = new THREE.Group();
-  private streaks: THREE.InstancedMesh | null = null;
-  private streakData: { x: number; y: number; z: number; len: number; sp: number }[] = [];
-  private warp = 0; // how hard you're scrolling, 0..1
-  private flightPrev = 0;
-  private sm = new THREE.Matrix4();
-  private sq = new THREE.Quaternion();
-  private ss = new THREE.Vector3();
-  private sp = new THREE.Vector3();
   private fogColor = new THREE.Color();
   private bgDark = PALETTE.graphite.clone();
   private bgEnd = PALETTE.blue.clone();
@@ -85,13 +78,14 @@ export class DiveView implements View {
   ) {
     this.section = el.closest("section") ?? el;
     this.countEl = el.querySelector("[data-count]");
-    const coarse = window.matchMedia("(pointer: coarse)").matches;
+    // Half the wireframes and half the crumbs where the machine is slower:
+    // the tunnel reads the same, and the row of panels is what costs.
+    const coarse = shared.lean;
     this.scene.fog = new THREE.Fog(this.bgDark.clone(), 6, 30);
 
     this.buildHero(shared);
     this.panelZ = this.buildTunnel(coarse);
     this.buildCrumbs(coarse);
-    this.buildStreaks(coarse);
     this.buildWords(shared);
     this.buildStickers();
 
@@ -305,32 +299,6 @@ export class DiveView implements View {
     this.disposables.push(g, mat);
   }
 
-  /**
-   * Scroll hard and the dive goes to warp: streaks of light stretch past the
-   * camera, longer and brighter the faster you go. They're only there while
-   * you're actually pushing, so an unhurried read never sees them.
-   */
-  private buildStreaks(coarse: boolean) {
-    const n = coarse ? 70 : 150;
-    const g = new THREE.BoxGeometry(0.014, 0.014, 1);
-    const mat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false });
-    const mesh = new THREE.InstancedMesh(g, mat, n);
-    mesh.frustumCulled = false;
-    mesh.visible = false;
-    const col = new THREE.Color();
-    let seed = 91;
-    const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-    for (let i = 0; i < n; i++) {
-      const a = rnd() * Math.PI * 2;
-      const r = 0.7 + rnd() ** 0.7 * 2.6;
-      this.streakData.push({ x: Math.cos(a) * r, y: Math.sin(a) * r * 0.72, z: rnd() * 60, len: 0.5 + rnd(), sp: 0.6 + rnd() * 0.8 });
-      mesh.setColorAt(i, rnd() < 0.45 ? col.copy(PALETTE.blue).multiplyScalar(1.5) : col.set("#ffffff"));
-    }
-    this.streaks = mesh;
-    this.scene.add(mesh);
-    this.disposables.push(g, mat);
-  }
-
   /** Clichés hung across the tunnel. The eraser rubs a hole through each one. */
   private buildWords(shared: Shared) {
     const atlas = clicheAtlas(shared.family);
@@ -429,17 +397,18 @@ export class DiveView implements View {
     this.camera.aspect = vw / vh;
     // Tall screens see wider, so the eraser and the tunnel still fit across.
     const widen = Math.max(1, 1.6 / this.camera.aspect) ** 0.6;
-    // At warp the lens opens up, which is what makes it feel fast.
-    const punch = 1 + this.warp * 0.22 * this.flightPrev;
-    this.camera.fov = (2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(16)) * widen * punch) * 180) / Math.PI;
+    this.camera.fov = (2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(16)) * widen) * 180) / Math.PI;
     this.camera.setViewOffset(vw, vh, rect.left, rect.top, rect.width, rect.height);
 
     // Progress through the pinned section, eased a little.
     const sr = this.section.getBoundingClientRect();
     const target = f.reduced ? 1 : clamp01(-sr.top / Math.max(1, sr.height - vh));
-    // How hard you're scrolling: it runs up fast and eases back down slowly.
-    const push = Math.min(1, (Math.abs(target - this.p) / Math.max(dt, 1e-3)) * 2.2);
-    this.warp += (push - this.warp) * (1 - Math.exp(-dt * (push > this.warp ? 11 : 2.6)));
+    // Joining while the visitor is already partway down: start there, rather
+    // than racing through the whole tunnel to catch up.
+    if (!this.joined) {
+      this.joined = true;
+      this.p = target;
+    }
     this.p += (target - this.p) * (1 - Math.exp(-dt * 8));
     if (Math.abs(target - this.p) < 1e-4) this.p = target;
     const p = this.p;
@@ -484,8 +453,7 @@ export class DiveView implements View {
     // Squash and stretch with speed; a rub-rub wobble while it's erasing.
     const speed = Math.min(1, vel.length() / Math.max(dt, 1e-3) / 40);
     const wob = turn * Math.sin(time * 38) * 0.05 * speed;
-    const pull = 1 + this.warp * 0.5 * turn;
-    this.body.scale.set((1 + speed * 0.22) * pull, (1 - speed * 0.1 + wob) / pull ** 0.5, (1 - speed * 0.1 - wob) / pull ** 0.5);
+    this.body.scale.set(1 + speed * 0.22, 1 - speed * 0.1 + wob, 1 - speed * 0.1 - wob);
 
     // Eyes follow the cursor, and blink now and then.
     if (!f.reduced) {
@@ -545,31 +513,10 @@ export class DiveView implements View {
     this.camera.rotateZ(-this.look.x * 0.04 - vel.x * 0.6 * turn);
 
     // The tunnel slowly rolls as you go, and the dark turns blue at the end.
-    this.tunnel.rotation.z = flight * 0.5 + this.warp * 0.22;
-    // Breaking out: the walls sweep past you on the way into the blue.
-    const burst = band(p, 0.78, 0.9) ** 1.6;
-    this.tunnel.scale.set(1 + burst * 2.4, 1 + burst * 2.4, 1);
+    this.tunnel.rotation.z = flight * 0.5;
     this.tunnel.visible = build > 0 && band(p, 0.8, 0.87) < 1;
     this.fogColor.copy(this.bgDark).lerp(this.bgEnd, bg);
     (this.scene.fog as THREE.Fog).color.copy(this.fogColor);
-
-    // Warp streaks: only while you're pushing, and only down the tunnel.
-    const streaks = this.streaks!;
-    const warpOn = this.warp > 0.04 && flight > 0.01 && !f.reduced && toEnd < 1;
-    streaks.visible = warpOn;
-    if (warpOn) {
-      (streaks.material as THREE.MeshBasicMaterial).opacity = Math.min(0.5, this.warp * 0.62) * smooth(flight * 8) * (1 - toEnd);
-      const span = 70;
-      for (let i = 0; i < this.streakData.length; i++) {
-        const st = this.streakData[i];
-        const z = this.camPos.z - 3 - ((st.z + time * st.sp * 16) % span);
-        this.sp.set(st.x + pos.x * 0.3, st.y + pos.y * 0.3, z);
-        this.ss.set(1, 1, 0.5 + this.warp * st.len * 22);
-        this.sm.compose(this.sp, this.sq, this.ss);
-        streaks.setMatrixAt(i, this.sm);
-      }
-      streaks.instanceMatrix.needsUpdate = true;
-    }
 
     // Stickers pop in round it and shy away from the cursor.
     const endIn = clamp01((p - 0.84) / 0.12);
@@ -614,8 +561,6 @@ export class DiveView implements View {
       if (this.countEl) this.countEl.textContent = String(c).padStart(3, "0");
     }
 
-    this.flightPrev = flight;
-
     // Sound follows the same timeline.
     if (!f.reduced) {
       sound.dive({ open: band(p, 0, 0.13), flight, speed, turn, end: toEnd });
@@ -625,20 +570,18 @@ export class DiveView implements View {
     }
   }
 
-  warm(r: THREE.WebGLRenderer) {
+  async warm(r: THREE.WebGLRenderer) {
     this.camera.aspect = window.innerWidth / window.innerHeight;
     this.camera.updateProjectionMatrix();
-    // Compile with everything visible, then upload the textures.
+    // Everything has to be visible while it compiles, or the tunnel's shader
+    // is built the first frame you can see it — which is the worst moment.
     const vis = [this.tunnel.visible, this.stickerGroup.visible];
     this.tunnel.visible = this.stickerGroup.visible = true;
-    r.compile(this.scene, this.camera);
-    [this.tunnel.visible, this.stickerGroup.visible] = vis;
-    this.scene.traverse((o) => {
-      const m = (o as THREE.Mesh).material as THREE.Material & { map?: THREE.Texture; uniforms?: Record<string, { value: unknown }> };
-      if (m?.map) r.initTexture(m.map);
-      const t = m?.uniforms?.uMap?.value;
-      if (t instanceof THREE.Texture) r.initTexture(t);
-    });
+    try {
+      await warmScene(r, this.scene, this.camera);
+    } finally {
+      [this.tunnel.visible, this.stickerGroup.visible] = vis;
+    }
   }
 
   render(r: THREE.WebGLRenderer) {

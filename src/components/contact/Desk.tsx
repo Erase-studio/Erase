@@ -2,6 +2,7 @@
 
 import { useState, useSyncExternalStore } from "react";
 import { site } from "@/content/site";
+import { Roll } from "@/components/ui/Roll";
 
 /** Next to the letter: the address (copy it) and what time it is here. */
 export function Desk() {
@@ -37,10 +38,10 @@ export function Desk() {
       <p className="ct-desk__row">
         <span className="mono muted">Or email</span>
         <a href={`mailto:${site.email}`} className="ct-desk__mail">
-          {site.email}
+          <Roll>{site.email}</Roll>
         </a>
         <button type="button" className="ct-desk__copy mono" onClick={copy} aria-live="polite">
-          {copied ? "Copied" : "Copy"}
+          <Roll>{copied ? "Copied" : "Copy"}</Roll>
         </button>
       </p>
       <p className="ct-desk__row">

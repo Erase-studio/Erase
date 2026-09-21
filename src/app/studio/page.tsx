@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { stack } from "@/content/agency";
 import { site } from "@/content/site";
 import { Rules } from "@/components/studio/Rules";
+import { Ledger } from "@/components/studio/Ledger";
 
 export const metadata: Metadata = {
   title: "Studio",
@@ -18,7 +19,7 @@ export default function StudioPage() {
             (Index) Studio
           </p>
           <p className="mono muted" data-reveal="fade" data-delay="0.3">
-            Independent · {site.based}
+            Independent, {site.based}
           </p>
         </div>
         <div className="sh__row">
@@ -43,6 +44,8 @@ export default function StudioPage() {
         <Rules />
       </section>
 
+      <Ledger />
+
       <section className="kit frame" aria-labelledby="kit-title">
         <p id="kit-title" className="mono muted" data-reveal="fade">
           What we build with
@@ -51,7 +54,7 @@ export default function StudioPage() {
           {stack.join(" / ")}
         </p>
         <p className="mono muted kit__note" data-reveal="fade">
-          Independent · Based in {site.based} · Working worldwide
+          Independent, based in {site.based}, working worldwide
         </p>
       </section>
     </main>

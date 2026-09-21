@@ -1,5 +1,4 @@
 import { Hero } from "@/components/home/Hero";
-import { Statement } from "@/components/home/Statement";
 import { Crumple } from "@/components/home/Crumple";
 import { WorkStack } from "@/components/home/WorkStack";
 import { ServiceRows } from "@/components/home/ServiceRows";
@@ -10,10 +9,9 @@ export default function Home() {
   return (
     <main id="main">
       <Hero />
-      <Statement />
       <Crumple />
       <WorkStack />
-      <ServiceRows />
+      <ServiceRows limit={3} />
       <ProcessPath />
       <Dive />
     </main>

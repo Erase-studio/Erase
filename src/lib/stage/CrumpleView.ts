@@ -1,7 +1,10 @@
 import * as THREE from "three";
 import { sound } from "@/lib/sound";
-import { pixelCamera, type Frame, type Shared, type View } from "./Stage";
+import { pixelCamera, type Frame, type Shared, type View, warmScene } from "./Stage";
 import { drawTemplate } from "./drawTemplate";
+
+/** How many dents the paper remembers at once. */
+const DENTS = 16;
 
 const noise = /* glsl */ `
 vec3 mod289(vec3 x){return x-floor(x*(1./289.))*289.;}
@@ -35,9 +38,10 @@ float creases(vec3 p){
 `;
 
 /**
- * The template, printed on a sheet. Scroll and it creases, folds in on itself,
- * becomes a ball of paper, and gets thrown out of frame. Faceted shading comes
- * from the folded geometry itself (flat normals), so every crease catches light.
+ * The template, printed on a sheet. Press it and it crinkles where you
+ * pressed. Scroll and it creases, folds in on itself, becomes a ball of paper, and is thrown
+ * out of frame. Faceted shading comes from the folded geometry itself (flat
+ * normals), so every crease and every dent catches the light.
  */
 export class CrumpleView implements View {
   order = 1;
@@ -45,9 +49,21 @@ export class CrumpleView implements View {
   private camera = pixelCamera(1, 1);
   private mesh: THREE.Mesh;
   private shadow: THREE.Mesh;
-  private uniforms = { uC: { value: 0 }, uW: { value: 100 }, uH: { value: 60 }, uTime: { value: 0 } };
+  private uniforms = {
+    uC: { value: 0 },
+    uW: { value: 100 },
+    uH: { value: 60 },
+    uTime: { value: 0 },
+    uDents: { value: Array.from({ length: DENTS }, () => new THREE.Vector3(0, 0, 0)) },
+  };
   private tex: THREE.CanvasTexture;
+  private dentAt = 0;
+  private lastDent = new THREE.Vector2(-9, -9);
+  private ray = new THREE.Raycaster();
+  private plane = new THREE.Plane();
+  private hit = new THREE.Vector3();
   private progress = 0;
+  private joined = false;
 
   constructor(
     public el: HTMLElement,
@@ -78,6 +94,7 @@ export class CrumpleView implements View {
           "#include <common>",
           `#include <common>
           uniform float uC; uniform float uW; uniform float uH; uniform float uTime;
+          uniform vec3 uDents[${DENTS}];
           ${noise}`,
         )
         .replace(
@@ -94,6 +111,15 @@ export class CrumpleView implements View {
           vec3 p1 = sheet;
           p1.xy *= 1.0 - 0.42 * s1 * (0.7 + 0.6 * cr);
           p1.z += (cr - 0.55) * m * 0.34 * s1 + snoise(q * 0.8 + 3.0) * m * 0.18 * s1;
+          // Where the visitor pressed, the paper crinkles: the same creases the
+          // crumple will use, raised locally, so a touch reads as a real hand.
+          float touch = 0.0;
+          for (int k = 0; k < ${DENTS}; k++) {
+            vec2 dd = (st - uDents[k].xy) * vec2(uW, uH);
+            touch += uDents[k].z * exp(-dot(dd, dd) / (m * m * 0.02));
+          }
+          touch = min(touch, 1.4) * (1.0 - s1);
+          p1.z += ((cr - 0.55) * 0.42 - 0.12) * m * 0.16 * touch;
           // Stage 2: wrapped onto a lumpy sphere, the creases pushed in and out.
           float th = st.x * 6.2831853 + snoise(q * 0.5) * 0.9;
           float ph = st.y * 3.1415926;
@@ -124,19 +150,43 @@ export class CrumpleView implements View {
     this.scene.add(key, new THREE.HemisphereLight(0xffffff, 0x8d93a1, 0.8));
   }
 
+  /** Where on the sheet (0..1) the pointer is, if it's over it at all. */
+  private sheetAt(f: Frame) {
+    const { rect, pointer } = f;
+    if (pointer.x < -1e3) return null;
+    const nx = ((pointer.x - rect.left) / rect.width) * 2 - 1;
+    const ny = -((pointer.y - rect.top) / rect.height) * 2 + 1;
+    this.mesh.updateMatrixWorld();
+    // The camera is only brought up to date at render; aim from where it is now.
+    this.camera.updateMatrixWorld();
+    this.ray.setFromCamera(new THREE.Vector2(nx, ny), this.camera);
+    const normal = new THREE.Vector3(0, 0, 1).applyQuaternion(this.mesh.quaternion);
+    this.plane.setFromNormalAndCoplanarPoint(normal, this.mesh.position);
+    if (!this.ray.ray.intersectPlane(this.plane, this.hit)) return null;
+    const local = this.mesh.worldToLocal(this.hit.clone());
+    const u = local.x / this.uniforms.uW.value + 0.5;
+    const v = local.y / this.uniforms.uH.value + 0.5;
+    return u >= 0 && u <= 1 && v >= 0 && v <= 1 ? new THREE.Vector2(u, v) : null;
+  }
+
   update(f: Frame) {
     const { rect } = f;
     pixelCamera(rect.width, rect.height, this.camera);
     const sec = this.el.parentElement!.getBoundingClientRect();
     const raw = Math.min(1, Math.max(0, -sec.top / Math.max(1, sec.height - f.vh)));
     const was = this.progress;
+    // Joining mid-scroll starts where the visitor is, not at the beginning.
+    if (!this.joined) {
+      this.joined = true;
+      this.progress = raw;
+    }
     this.progress += (raw - this.progress) * (f.reduced ? 1 : 1 - Math.exp(-f.dt * 9));
     const p = this.progress;
     if (!f.reduced) {
       // Crushing (either way) creases the paper; the throw goes whoosh once.
-      const crush = Math.abs(Math.min(0.56, Math.max(0.1, p)) - Math.min(0.56, Math.max(0.1, was)));
-      if (crush > 0) sound.crinkle(crush * 260);
-      if (was < 0.6 && p >= 0.6) sound.whoosh(0.6, 0.8, 0.6);
+      const crush = Math.abs(Math.min(0.48, Math.max(0.12, p)) - Math.min(0.48, Math.max(0.12, was)));
+      if (crush > 0) sound.crinkle(crush * 230);
+      if (was < 0.5 && p >= 0.5) sound.whoosh(0.6, 0.8, 0.6);
     }
 
     const s = this.slot.getBoundingClientRect();
@@ -146,15 +196,29 @@ export class CrumpleView implements View {
     this.uniforms.uH.value = s.height;
     this.uniforms.uTime.value = f.time;
 
-    // 0 – .1 flat, .1 – .56 crumple, .58 – .82 thrown.
-    const c = Math.min(1, Math.max(0, (p - 0.1) / 0.46));
+    // 0 – .12 flat, .12 – .48 crumple, .5 – .72 thrown.
+    const c = Math.min(1, Math.max(0, (p - 0.12) / 0.36));
     const eC = c * c * (3 - 2 * c);
     this.uniforms.uC.value = eC;
-    const toss = Math.min(1, Math.max(0, (p - 0.58) / 0.24));
+    const toss = Math.min(1, Math.max(0, (p - 0.5) / 0.22));
     const arc = toss * toss;
     this.mesh.position.set(cx + arc * rect.width * 0.62, cy + Math.sin(toss * Math.PI) * rect.height * 0.28 - arc * rect.height * 0.35, toss * 240);
     this.mesh.rotation.set(-0.35 * (1 - eC) + toss * 3.2, 0.25 * (1 - eC) + eC * 0.9 + toss * 5, eC * 0.6 + toss * 2.4);
     this.mesh.visible = toss < 0.999;
+
+    // Dents: only while it's still a flat sheet you could press. Each one
+    // springs back most of the way, but paper never quite forgets.
+    const dents = this.uniforms.uDents.value;
+    for (const d of dents) if (d.z > 0.55) d.z = Math.max(0.55, d.z - f.dt * 0.5);
+    if (!f.reduced && eC < 0.15 && f.pointer.live) {
+      const at = this.sheetAt(f);
+      if (at && at.distanceTo(this.lastDent) > (f.pointer.down ? 0.025 : 0.045)) {
+        this.lastDent.copy(at);
+        const d = dents[this.dentAt++ % DENTS];
+        d.set(at.x, at.y, f.pointer.down ? 1.5 : 1);
+        sound.crinkle(f.pointer.down ? 10 : 4);
+      }
+    }
 
     const ball = Math.min(s.width, s.height) * 0.21;
     const sw = THREE.MathUtils.lerp(s.width * 1.08, ball * 2.6, eC);
@@ -165,13 +229,7 @@ export class CrumpleView implements View {
   }
 
   warm(r: THREE.WebGLRenderer) {
-    r.compile(this.scene, this.camera);
-    this.scene.traverse((o) => {
-      const m = (o as THREE.Mesh).material as THREE.Material & { map?: THREE.Texture; uniforms?: Record<string, { value: unknown }> };
-      if (m?.map) r.initTexture(m.map);
-      const t = m?.uniforms?.uMap?.value;
-      if (t instanceof THREE.Texture) r.initTexture(t);
-    });
+    return warmScene(r, this.scene, this.camera);
   }
 
   render(r: THREE.WebGLRenderer) {

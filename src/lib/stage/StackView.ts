@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { sound } from "@/lib/sound";
-import { pixelCamera, type Frame, type Shared, type View } from "./Stage";
+import { pixelCamera, type Frame, type Shared, type View, warmScene } from "./Stage";
 import { poster } from "./posters";
 
 const vertex = /* glsl */ `
@@ -93,6 +93,7 @@ export class StackView implements View {
   private sheets: Sheet[] = [];
   private shadow: THREE.Mesh;
   private progress = 0;
+  private joined = false;
   private hover = 0;
   private geo = new THREE.PlaneGeometry(1, 1, 96, 60);
   onActive?: (i: number) => void;
@@ -105,7 +106,8 @@ export class StackView implements View {
     shared: Shared,
   ) {
     slugs.forEach((slug, i) => {
-      const tex = new THREE.CanvasTexture(poster(slug, shared.family));
+      // The screenshot lands a moment later; the poster is reprinted then.
+      const tex: THREE.CanvasTexture = new THREE.CanvasTexture(poster(slug, shared.family, () => (tex.needsUpdate = true)));
       tex.colorSpace = THREE.SRGBColorSpace;
       tex.anisotropy = 8;
       const mat = new THREE.ShaderMaterial({
@@ -164,6 +166,11 @@ export class StackView implements View {
     const sec = this.el.parentElement!.getBoundingClientRect();
     const raw = Math.min(1, Math.max(0, -sec.top / Math.max(1, sec.height - f.vh)));
     const was = this.progress;
+    // Joining mid-scroll starts where the visitor is, not at the beginning.
+    if (!this.joined) {
+      this.joined = true;
+      this.progress = raw;
+    }
     this.progress += (raw - this.progress) * (f.reduced ? 1 : 1 - Math.exp(-f.dt * 6));
     const n = this.sheets.length;
     // A light paper rustle while a sheet is peeling.
@@ -231,13 +238,7 @@ export class StackView implements View {
   }
 
   warm(r: THREE.WebGLRenderer) {
-    r.compile(this.scene, this.camera);
-    this.scene.traverse((o) => {
-      const m = (o as THREE.Mesh).material as THREE.Material & { map?: THREE.Texture; uniforms?: Record<string, { value: unknown }> };
-      if (m?.map) r.initTexture(m.map);
-      const t = m?.uniforms?.uMap?.value;
-      if (t instanceof THREE.Texture) r.initTexture(t);
-    });
+    return warmScene(r, this.scene, this.camera);
   }
 
   render(r: THREE.WebGLRenderer) {

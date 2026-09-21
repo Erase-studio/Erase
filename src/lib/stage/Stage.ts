@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+import { studioEnvironment } from "./studioEnv";
 
 /**
  * One WebGL canvas laid over the page. Each piece of 3D (the hero objects, the
@@ -32,19 +32,57 @@ export interface View {
   update(f: Frame): void;
   render(renderer: THREE.WebGLRenderer, f: Frame): void;
   /** Compile shaders and upload textures now, so the first on-screen frame doesn't stall. */
-  warm?(renderer: THREE.WebGLRenderer): void;
+  warm?(renderer: THREE.WebGLRenderer): void | Promise<void>;
   dispose(): void;
 }
 
+/**
+ * Get a scene ready to be drawn without stopping the page to do it.
+ *
+ * Compiling a shader is the single longest thing this site asks a browser to
+ * do — the dive's tunnel alone used to block the main thread for about a
+ * second. compileAsync hands that to the driver in the background where the
+ * card supports it, and the textures go up afterwards, one per idle gap.
+ */
+export async function warmScene(r: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.Camera) {
+  await r.compileAsync(scene, camera);
+  const maps: THREE.Texture[] = [];
+  scene.traverse((o) => {
+    const m = (o as THREE.Mesh).material as THREE.Material & { map?: THREE.Texture; uniforms?: Record<string, { value: unknown }> };
+    if (m?.map) maps.push(m.map);
+    const t = m?.uniforms?.uMap?.value;
+    if (t instanceof THREE.Texture) maps.push(t);
+  });
+  // One texture per task, so no single frame pays for all of them. Not idle
+  // callbacks: while the page is animating a busy laptop may never be idle,
+  // and the scene would still be waiting when you scrolled into it.
+  for (const t of maps) {
+    await new Promise<void>((done) => window.setTimeout(() => (r.initTexture(t), done()), 0));
+  }
+}
+
 export type Shared = {
-  env: THREE.Texture;
+  /**
+   * The light probe everything reflects. Null on lean machines: building it
+   * costs a phone over a second of blocked main thread, and the direct lights
+   * in each scene carry the look well enough without it.
+   */
+  env: THREE.Texture | null;
   family: string;
+  /**
+   * True on a machine that should be given less to do: a phone, or anything
+   * with few cores or little memory. Views use it to halve their detail rather
+   * than drop out entirely — the scene is the same, it just costs less to make.
+   */
+  lean: boolean;
 };
 
 export class Stage {
   renderer: THREE.WebGLRenderer;
   shared: Shared;
   private views: View[] = [];
+  /** Built, still compiling. Not drawn yet, but already ours to dispose. */
+  private pending = new Set<View>();
   private pmrem: THREE.PMREMGenerator;
   private time = 0;
   private pointer = { x: -1e4, y: -1e4, vx: 0, vy: 0, live: false, down: false };
@@ -66,9 +104,12 @@ export class Stage {
     this.renderer.autoClear = false;
     host.appendChild(this.renderer.domElement);
     this.pmrem = new THREE.PMREMGenerator(this.renderer);
+    const n = navigator as Navigator & { deviceMemory?: number };
+    const lean = coarse || (n.hardwareConcurrency ?? 8) <= 4 || (n.deviceMemory ?? 8) <= 4;
     this.shared = {
-      env: this.pmrem.fromScene(new RoomEnvironment(), 0.04).texture,
+      env: lean ? null : studioEnvironment(this.pmrem),
       family: getComputedStyle(document.body).fontFamily,
+      lean,
     };
     this.resize();
     window.addEventListener("pointermove", this.onMove, { passive: true });
@@ -90,20 +131,34 @@ export class Stage {
   private onDown = () => (this.pointer.down = true);
   private onUp = () => (this.pointer.down = false);
 
+  /**
+   * A view joins the draw list once it is warm. Until then it is off screen
+   * anyway — that's the only moment we ever build one — so waiting costs
+   * nothing and saves a stalled frame.
+   */
   add(v: View) {
-    v.warm?.(this.renderer);
-    this.views.push(v);
-    this.views.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    this.pending.add(v);
+    const join = () => {
+      if (!this.pending.delete(v)) return; // removed while warming
+      this.views.push(v);
+      this.views.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    };
+    const warmed = v.warm?.(this.renderer);
+    if (warmed) warmed.then(join, join);
+    else join();
   }
 
   remove(v: View) {
+    this.pending.delete(v);
     this.views = this.views.filter((x) => x !== v);
     v.dispose();
   }
 
   clear() {
     this.views.forEach((v) => v.dispose());
+    this.pending.forEach((v) => v.dispose());
     this.views = [];
+    this.pending.clear();
   }
 
   resize() {
@@ -167,7 +222,7 @@ export class Stage {
     window.removeEventListener("pointerdown", this.onDown);
     window.removeEventListener("pointerup", this.onUp);
     this.clear();
-    this.shared.env.dispose();
+    this.shared.env?.dispose();
     this.pmrem.dispose();
     this.renderer.dispose();
     this.renderer.domElement.remove();

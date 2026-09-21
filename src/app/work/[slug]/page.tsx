@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: PageProps<"/work/[slug]">): P
   if (!item) return {};
   return {
     title: `${item.title}: ${item.sector}`,
-    description: cases[slug]?.lede ?? item.brief,
+    description: item.brief,
     alternates: { canonical: `/work/${slug}` },
   };
 }

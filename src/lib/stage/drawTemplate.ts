@@ -4,6 +4,8 @@
  * logo-cloud placeholders, feature cards. If it isn't recognisable, the joke dies.
  */
 
+import { genericCopy } from "./genericCopy";
+
 const SYS =
   'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
 
@@ -42,8 +44,13 @@ function blob(
 
 export const TEMPLATE_BG = "#F6F6F9";
 
-/** t: 0 → 1 load-in progress. Each block fades up in order, like a slow site assembling itself. */
-export function drawTemplate(ctx: CanvasRenderingContext2D, w: number, h: number, t = 1) {
+/**
+ * t: 0 → 1 load-in progress. Each block fades up in order, like a slow site
+ * assembling itself. `seed` deals a different set of the same words — seed 0
+ * is the one the home page crumples, and never changes.
+ */
+export function drawTemplate(ctx: CanvasRenderingContext2D, w: number, h: number, t = 1, seed = 0) {
+  const copy = genericCopy(seed);
   if (w < 40 || h < 40) return;
   const mobile = w < 720;
   const pad = mobile ? 20 : Math.max(32, w * 0.04);
@@ -88,12 +95,12 @@ export function drawTemplate(ctx: CanvasRenderingContext2D, w: number, h: number
   ctx.fillStyle = "#0F172A";
   ctx.font = `700 ${mobile ? 17 : 20}px ${SYS}`;
   ctx.textAlign = "left";
-  ctx.fillText("Agency®", pad, navY + 8);
+  ctx.fillText(copy.brand, pad, navY + 8);
 
   if (!mobile) {
     ctx.font = `500 15px ${SYS}`;
     ctx.fillStyle = "#475569";
-    const links = ["Services", "Solutions", "Work", "About", "Blog"];
+    const links = copy.nav;
     let lx = cx - 210;
     for (const l of links) {
       ctx.fillText(l, lx, navY + 8);
@@ -114,7 +121,7 @@ export function drawTemplate(ctx: CanvasRenderingContext2D, w: number, h: number
   // Badge
   const top = mobile ? h * 0.2 : h * 0.24;
   ctx.font = `500 ${mobile ? 12 : 14}px ${SYS}`;
-  const badge = "✨ New: AI-powered solutions  →";
+  const badge = copy.badge;
   const bw = ctx.measureText(badge).width + 32;
   roundRect(ctx, cx - bw / 2, top - 17, bw, 34, 17);
   ctx.fillStyle = "rgba(255,255,255,0.75)";
@@ -130,9 +137,7 @@ export function drawTemplate(ctx: CanvasRenderingContext2D, w: number, h: number
   const hs = mobile ? Math.min(w * 0.095, 40) : Math.min(w * 0.058, 78);
   ctx.fillStyle = "#0F172A";
   ctx.font = `700 ${hs}px ${SYS}`;
-  const hl = mobile
-    ? ["We transform", "ideas into digital", "experiences."]
-    : ["We transform ideas into", "digital experiences."];
+  const hl = mobile ? copy.headline[1] : copy.headline[0];
   let y = top + (mobile ? 58 : 78) + hs * 0.2;
   for (const line of hl) {
     ctx.fillText(line, cx, y);
@@ -144,12 +149,7 @@ export function drawTemplate(ctx: CanvasRenderingContext2D, w: number, h: number
   ctx.fillStyle = "#64748B";
   const ss = mobile ? 15 : Math.min(20, w * 0.015);
   ctx.font = `400 ${ss}px ${SYS}`;
-  const sub = mobile
-    ? ["Where creativity meets technology.", "Innovative solutions, tailored", "to your vision."]
-    : [
-        "Where creativity meets technology. Innovative solutions tailored",
-        "to your vision, powered by our passion and expertise.",
-      ];
+  const sub = mobile ? copy.sub[1] : copy.sub[0];
   y += ss * 0.6;
   for (const line of sub) {
     ctx.fillText(line, cx, y);
@@ -176,21 +176,21 @@ export function drawTemplate(ctx: CanvasRenderingContext2D, w: number, h: number
   ctx.shadowColor = "transparent";
   ctx.fillStyle = "#FFFFFF";
   ctx.font = `600 ${mobile ? 14 : 16}px ${SYS}`;
-  ctx.fillText("Get started →", bx + b1w / 2, y + 1);
+  ctx.fillText(copy.actions[0], bx + b1w / 2, y + 1);
   roundRect(ctx, bx + b1w + gapB, y - bh / 2, b2w, bh, bh / 2);
   ctx.fillStyle = "rgba(255,255,255,0.8)";
   ctx.fill();
   ctx.strokeStyle = "#CBD5E1";
   ctx.stroke();
   ctx.fillStyle = "#0F172A";
-  ctx.fillText("Learn more", bx + b1w + gapB + b2w / 2, y + 1);
+  ctx.fillText(copy.actions[1], bx + b1w + gapB + b2w / 2, y + 1);
 
   stage(6);
   // Social proof that proves nothing
   y += mobile ? 64 : 84;
   ctx.fillStyle = "#94A3B8";
   ctx.font = `500 ${mobile ? 11 : 13}px ${SYS}`;
-  ctx.fillText("TRUSTED BY 500+ COMPANIES WORLDWIDE", cx, y);
+  ctx.fillText(copy.proof, cx, y);
   y += mobile ? 28 : 36;
   const logos = mobile ? 3 : 5;
   const lw = mobile ? 76 : 104;
@@ -211,7 +211,7 @@ export function drawTemplate(ctx: CanvasRenderingContext2D, w: number, h: number
   const cgap = 24;
   let cxs = cx - (cards * cw + (cards - 1) * cgap) / 2;
   const icons = ["⚡", "🚀", "💡"];
-  const titles = ["Lightning fast", "Scalable growth", "Smart solutions"];
+  const titles = copy.cards;
   for (let i = 0; i < cards; i++) {
     ctx.shadowColor = "rgba(15,23,42,0.08)";
     ctx.shadowBlur = 30;

@@ -1,0 +1,162 @@
+/**
+ * The pencil case: full-bleed blue, a tray of erasers above a ruled list.
+ * The one break of colour on the whole site, so it has to earn the screen.
+ */
+
+@layer components {
+  .suite {
+    position: relative;
+    /* The deeper of the two blues, so white type on it passes comfortably. */
+    background: #2448ff;
+    color: #f7f7fa;
+    --line: rgb(244 244 248 / 0.26);
+    --muted: rgb(244 244 248 / 0.92);
+    padding-block: clamp(56px, 8vw, 120px);
+  }
+
+  .suite__inner {
+    display: grid;
+    gap: clamp(22px, 3vw, 40px);
+  }
+
+  .suite__head {
+    display: grid;
+    gap: 14px;
+    max-width: 56ch;
+  }
+
+  .suite__head .mono {
+    color: var(--muted);
+  }
+
+  .suite__title {
+    font-size: clamp(2.4rem, 6.4vw, 6.2rem);
+    font-weight: 500;
+    letter-spacing: -0.05em;
+    line-height: 0.94;
+  }
+
+  .suite__lede {
+    max-width: 48ch;
+    color: var(--muted);
+  }
+
+  /* The tray. Without WebGL there is simply nothing here, and the list carries
+     the whole idea by itself. */
+  .suite__stage {
+    height: clamp(230px, 26vw, 340px);
+  }
+
+  html[data-stage="off"] .suite__stage {
+    display: none;
+  }
+
+  .suite__body {
+    display: grid;
+    gap: clamp(20px, 3vw, 44px);
+  }
+
+  @media (min-width: 900px) {
+    .suite__body {
+      grid-template-columns: 1.35fr 1fr;
+      align-items: start;
+    }
+  }
+
+  .suite__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .suite__row {
+    border-bottom: 1px solid var(--line);
+  }
+
+  .suite__bar {
+    display: grid;
+    grid-template-columns: 3.2em 1fr auto;
+    align-items: baseline;
+    gap: 14px;
+    width: 100%;
+    padding-block: clamp(12px, 1.6vw, 20px);
+    border: 0;
+    background: none;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .suite__bar:focus-visible {
+    outline: 1px solid currentColor;
+    outline-offset: -3px;
+  }
+
+  .suite__n,
+  .suite__worn {
+    color: var(--muted);
+    transition: color 0.35s var(--ease);
+  }
+
+  .suite__name {
+    font-size: clamp(1.4rem, 3.2vw, 2.6rem);
+    font-weight: 500;
+    letter-spacing: -0.035em;
+    line-height: 1.04;
+    opacity: 0.78;
+    transition:
+      opacity 0.35s var(--ease),
+      translate 0.45s var(--ease);
+  }
+
+  .suite__row[data-on="true"] .suite__name {
+    opacity: 1;
+    translate: 8px 0;
+  }
+
+  .suite__row[data-on="true"] .suite__n,
+  .suite__row[data-on="true"] .suite__worn {
+    color: inherit;
+  }
+
+  .suite__detail {
+    display: grid;
+    gap: 16px;
+    align-content: start;
+    padding: clamp(18px, 2.4vw, 30px);
+    border-radius: var(--radius);
+    background: rgb(0 0 0 / 0.18);
+  }
+
+  .suite__short {
+    font-size: clamp(1.05rem, 1.8vw, 1.4rem);
+    letter-spacing: -0.015em;
+    line-height: 1.35;
+  }
+
+  .suite__parts {
+    display: grid;
+    gap: 8px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .suite__parts li {
+    padding-top: 8px;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+  }
+
+  @media (max-width: 480px) {
+    .suite__bar {
+      grid-template-columns: 2.6em 1fr;
+    }
+
+    .suite__worn {
+      grid-column: 2;
+      grid-row: 2;
+    }
+  }
+}

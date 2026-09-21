@@ -3,6 +3,7 @@
 import { useEffect, useRef, useSyncExternalStore } from "react";
 import { site } from "@/content/site";
 import { Mark } from "@/components/ui/Mark";
+import { Roll } from "@/components/ui/Roll";
 
 /** What time it is at the studio, ticking every 20 s (blank on the server). */
 export function StudioClock() {
@@ -32,7 +33,8 @@ export function BackToTop() {
       className="fb__top-btn mono"
       onClick={() => (window.__lenis ? window.__lenis.scrollTo(0, { duration: 1.8 }) : window.scrollTo({ top: 0, behavior: "smooth" }))}
     >
-      Back to top ↑
+      <Roll>Back to top</Roll>
+      <span aria-hidden="true">↑</span>
     </button>
   );
 }

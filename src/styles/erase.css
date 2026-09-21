@@ -1,0 +1,217 @@
+/**
+ * Erase your homepage: a sheet with the visitor's own site on it, and the
+ * rubber that takes it off.
+ */
+
+@layer components {
+  /* ── The rubbable sheet ── */
+
+  .rb {
+    position: relative;
+    isolation: isolate;
+    /* A thumb dragged up the screen still scrolls the page; only a sideways
+       drag rubs. Without this the sheet would be a trap on a phone. */
+    touch-action: pan-y;
+    cursor: none;
+  }
+
+  .rb__under {
+    position: absolute;
+    inset: 0;
+    /* Whatever shows through is read, never clicked — the sheet on top is the
+       thing you're using. */
+    pointer-events: none;
+    display: grid;
+    place-content: center;
+    place-items: center;
+    gap: 12px;
+    padding: 24px;
+    text-align: center;
+  }
+
+  .rb__sheet {
+    position: relative;
+    z-index: 1;
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Touch gets told what to do; a pointer finds out by moving. */
+  .rb::after {
+    content: "Swipe across to rub it out";
+    position: absolute;
+    left: 50%;
+    top: 12px;
+    z-index: 2;
+    padding: 7px 14px;
+    translate: -50% 0;
+    border-radius: 999px;
+    background: rgb(0 0 0 / 0.55);
+    color: #ecebe6;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.4s var(--ease);
+  }
+
+  @media (hover: none) {
+    .rb::after {
+      opacity: 1;
+    }
+
+    .rb[data-rubbing="true"]::after {
+      opacity: 0;
+    }
+  }
+
+}
+
+/**
+ * Erase your homepage: a sheet with the visitor's own site on it.
+ */
+@layer components {
+  .drop {
+    display: grid;
+    gap: clamp(22px, 3vw, 38px);
+    padding-block: clamp(90px, 14vh, 170px) clamp(60px, 9vw, 120px);
+  }
+
+  .drop__head {
+    display: grid;
+    gap: 14px;
+    max-width: 22ch;
+  }
+
+  .drop__title {
+    font-size: clamp(2.7rem, 7.6vw, 7.4rem);
+    font-weight: 500;
+    letter-spacing: -0.05em;
+    line-height: 0.93;
+  }
+
+  .drop__lede {
+    max-width: 44ch;
+  }
+
+  @media (min-width: 900px) {
+    .drop__head {
+      max-width: none;
+      grid-template-columns: 1.3fr 1fr;
+      align-items: end;
+      column-gap: clamp(24px, 4vw, 70px);
+    }
+
+    .drop__head .mono {
+      grid-column: 1 / -1;
+    }
+  }
+
+  /* The empty sheet, waiting. */
+  .drop__zone {
+    display: grid;
+    place-items: center;
+    gap: 14px;
+    padding: clamp(40px, 9vw, 110px) 24px;
+    border-radius: var(--radius);
+    box-shadow: inset 0 0 0 1px var(--line);
+    background: color-mix(in srgb, var(--fg) 3%, transparent);
+    text-align: center;
+    transition:
+      background-color 0.4s var(--ease),
+      box-shadow 0.4s var(--ease);
+  }
+
+  .drop__zone[data-over="true"] {
+    background: color-mix(in srgb, var(--color-blue) 14%, transparent);
+    box-shadow: inset 0 0 0 1px var(--color-blue);
+  }
+
+  .drop__big {
+    font-size: clamp(1.4rem, 3.4vw, 2.6rem);
+    font-weight: 500;
+    letter-spacing: -0.035em;
+    line-height: 1.05;
+  }
+
+  .drop__acts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+  }
+
+  .drop__sheet {
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: #0a0a0c;
+    aspect-ratio: 16 / 10;
+  }
+
+  .drop__under {
+    display: grid;
+    gap: 14px;
+    justify-items: center;
+    max-width: min(92%, 680px);
+  }
+
+  .drop__ask {
+    font-size: clamp(1.5rem, 4.2vw, 3.4rem);
+    font-weight: 500;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    color: #ecebe6;
+  }
+
+  .drop__under .mono {
+    color: #7f8189;
+  }
+
+  /* Nothing to say until there's something to say: the invitation arrives
+     when the sheet is gone. */
+  .drop__cta {
+    opacity: 0;
+    pointer-events: none;
+    translate: 0 6px;
+    transition:
+      opacity 0.5s var(--ease),
+      translate 0.5s var(--ease);
+  }
+
+  .drop__foot[data-gone="true"] .drop__cta {
+    opacity: 1;
+    pointer-events: auto;
+    translate: 0 0;
+  }
+
+  .drop__foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+  }
+
+  .drop__meta {
+    max-width: 40ch;
+    text-align: right;
+  }
+
+  .drop__privacy {
+    max-width: 62ch;
+  }
+
+  @media (max-width: 640px) {
+    .drop__sheet {
+      aspect-ratio: 4 / 5;
+    }
+
+    .drop__meta {
+      text-align: left;
+    }
+  }
+}

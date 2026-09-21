@@ -1,0 +1,11 @@
+{
+  "measured": "2026-09-21",
+  "js": 223,
+  "css": 16,
+  "fonts": 118,
+  "requests": 17,
+  "raster": 12,
+  "deps": 6,
+  "routes": 11,
+  "budget": 225
+}

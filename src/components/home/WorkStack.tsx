@@ -37,7 +37,7 @@ export function WorkStack() {
           <div>
             <p className="mono muted">(02) Selected work</p>
             <h2 id="ws-title" className="ws__lede">
-              Our own site, and concept studies that show our range.
+              Client sites and our own products: a restaurant, civic complaints, farms, clinics and exams.
             </h2>
           </div>
           <TransitionLink href="/work" title="Work" className="pill">
@@ -63,7 +63,7 @@ export function WorkStack() {
                   ))}
                 </h3>
                 <p className="mono ws__meta">
-                  <span data-kind={w.kind}>{w.kind}</span> · {w.sector} · {w.year}
+                  <span data-kind={w.kind}>{w.kind}</span>, {w.sector}, {w.year}
                 </p>
                 <p className="body">{w.brief}</p>
                 <TransitionLink href={`/work/${w.slug}`} title={w.title} label={w.kind} className="pill pill--solid" tabIndex={i === active ? 0 : -1}>

@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { pixelCamera, type Frame, type Shared, type View } from "./Stage";
+import { pixelCamera, type Frame, type Shared, type View, warmScene } from "./Stage";
 import { materials, PALETTE, pencilBodyGeometry, pencilTipGeometry } from "./objects";
 import { sound } from "@/lib/sound";
 
@@ -44,8 +44,9 @@ export class LineView implements View {
     this.el = el;
     this.lineMat = new THREE.MeshPhysicalMaterial({
       color: (document.documentElement.dataset.theme === "dark" ? CHALK : GRAPHITE).clone(),
-      metalness: 0.72,
-      roughness: 0.34,
+      // Graphite is metallic, but metal with nothing to reflect goes black.
+      metalness: shared.env ? 0.72 : 0.12,
+      roughness: shared.env ? 0.34 : 0.5,
       clearcoat: 0.3,
       envMap: shared.env,
       envMapIntensity: 1.2,
@@ -180,7 +181,7 @@ export class LineView implements View {
   }
 
   warm(r: THREE.WebGLRenderer) {
-    r.compile(this.scene, this.camera);
+    return warmScene(r, this.scene, this.camera);
   }
 
   render(r: THREE.WebGLRenderer, f: Frame) {
